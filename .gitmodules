@@ -1,3 +1,6 @@
 [submodule "firmware/feather-m4-can-button-led/src/osape"]
 	path = firmware/feather-m4-can-button-led/src/osape
 	url = git@github.com:jakeread/osape.git
+[submodule "js/osapjs"]
+	path = js/osapjs
+	url = git@github.com:jakeread/osapjs.git

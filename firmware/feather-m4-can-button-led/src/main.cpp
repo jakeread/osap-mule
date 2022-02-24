@@ -3,6 +3,7 @@
 #include "osape/core/osap.h"
 #include "osape/core/vertex.h"
 #include "arduino-ports/ardu-serlink.h"
+#include "osap_debug.h"
 
 // this vv should become another "link" w/ the Serial object passed in, 
 // or whatever structure you use for them uart ports 
