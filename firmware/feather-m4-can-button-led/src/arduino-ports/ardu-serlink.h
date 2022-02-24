@@ -33,9 +33,10 @@ is; no warranty is provided, and users accept all liability.
 
 typedef struct arduPortLink_t arduPortLink_t;
 
+void linkSetup(arduPortLink_t* link);
 void linkLoop(arduPortLink_t* link, vertex_t* vt);
 void linkSend(arduPortLink_t* link, vport_t* vp, uint8_t* data, uint16_t len);
-void linkCTS(arduPortLink_t* link, vport_t* vp);
+boolean linkCTS(arduPortLink_t* link, vport_t* vp);
 
 struct arduPortLink_t{
   // UART hardware:

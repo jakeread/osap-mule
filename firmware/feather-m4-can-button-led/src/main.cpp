@@ -36,12 +36,18 @@ void sendFn(vport_t* vp, uint8_t* data, uint16_t len){
   linkSend(&ser1Link, vp, data, len);
 }
 
-vport_t avp_ser1(&root, "arduino-ser", loopFn, sendFn);
+boolean ctsFn(vport_t* vp){
+  return linkCTS(&ser1Link, vp);
+}
+
+vport_t avp_ser1(&root, "arduino-ser", loopFn, sendFn, ctsFn);
 
 void setup() {
   pinMode(13, OUTPUT);
+  pinMode(5, OUTPUT);
   // this vv is a little confusing for the people, innit? 
   vp_usbSerial_setup(&vp_usbSerial);
+  linkSetup(&ser1Link);
 }
 
 uint32_t lastTick = 0;
@@ -49,6 +55,9 @@ uint32_t tickTime = 100;
 
 void loop() {
   osapMainLoop(&root);
+  if(Serial1.availableForWrite()){
+    //Serial1.write(88);
+  }
   if(millis() > lastTick + tickTime){
     digitalWrite(13, !digitalRead(13));
     lastTick = millis();

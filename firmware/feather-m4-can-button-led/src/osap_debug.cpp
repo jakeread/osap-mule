@@ -25,7 +25,7 @@ volatile boolean errLightBlink = true;
 volatile boolean errLightOn = false;
 
 void sysErrLightFlash(uint8_t level){
-  //ERRLIGHT_ON;
+  ERRLIGHT_ON;
   errLightOn = true;
   errLightLastOn = millis();
   switch(level){
@@ -47,14 +47,14 @@ void sysErrLightFlash(uint8_t level){
 void sysErrLightCheck(void){
   if(errLightOn && errLightBlink){
     if(errLightLastOn + errLightOnTime < millis()){
-      //ERRLIGHT_OFF;
+      ERRLIGHT_OFF;
       errLightOn = false;
     }
   }
 }
 
 // config-your-own-ll-escape-hatch
-void sysError(String msg){
+void debugPrint(String msg){
   // whatever you want,
   //ERRLIGHT_ON;
   uint32_t len = msg.length();
@@ -88,5 +88,5 @@ void logPacket(uint8_t* pck, uint16_t len){
     errmsg += String(pck[i]);
     errmsg += ", ";
   }
-  sysError(errmsg);
+  debugPrint(errmsg);
 }

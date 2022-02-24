@@ -17,13 +17,18 @@ no warranty is provided, and users accept all liability.
 
 #include <Arduino.h>
 
-void sysError(String msg);
+void debugPrint(String msg);
 void logPacket(uint8_t* pck, uint16_t len);
 //void sysError(uint8_t* bytes, uint16_t len);
 
 void sysErrLightFlash(uint8_t level);
 void sysErrLightCheck(void);
 
-#define ERROR(level, msg) sysErrLightFlash(level); sysError(msg)
+#define ERROR(level, msg) sysErrLightFlash(level); debugPrint(msg)
+#define DEBUG(msg) debugPrint(msg)
+
+#define ERRLIGHT_ON digitalWrite(5, HIGH)
+#define ERRLIGHT_OFF digitalWrite(5, LOW)
+#define ERRLIGHT_TOGGLE digitalWrite(5, !digitalRead(5))
 
 #endif 
