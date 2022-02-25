@@ -41,34 +41,11 @@ boolean linkCTS(arduPortLink_t* link, vport_t* vp);
 struct arduPortLink_t{
   // UART hardware:
   Uart* ser;
-  // the port # 
-  uint8_t portNum = 0;
-  // the current time;
-  volatile unsigned long now = 0;
-  // ack awaiting,
-  uint8_t ackAwaiting[4];
-  volatile boolean ackIsAwaiting = false;
-  // item awaiting tx,
-  uint8_t outPck[UP_BUFSIZE];
-  volatile uint8_t outPckLen = 0;             // length of pck to tx 
-  volatile uint8_t outPckNTA = 0;             // number of transmit attempts
-  volatile unsigned long outPckLTAT = 0;      // last time attempted transmit 
-  // flying packet: what we are currently writing to hw 
-  uint8_t outBuffer[UP_BUFSIZE];
-  volatile uint8_t outBufferWp = 0;           // write ptr
-  volatile uint8_t outBufferLen = 0;          // len of thing 
-  volatile uint8_t lastPckIdTxd = 1;          // most recently tx'd packet id 
-  // incoming data 
-  uint8_t inBuffer[2][UP_BUFSIZE];            // incoming catch 
-  uint8_t inBufferLen[2] = { 0, 0 };          // len / presence state 
-  volatile uint8_t inHead = 0;                // which 2 write 2 
-  volatile uint8_t inTail = 1;                // which 2 read from 
-  volatile uint8_t inBufferWp = 0;            // which byte 2 write 
-  volatile uint8_t lastPckIdRxd = 0;
-  uint8_t inBufferDecoded[UP_BUFSIZE];        // to cobs-decode into 
-  // ... light info 
-  volatile unsigned long portLightLastOn = 0;
-  volatile boolean portLightOn = false; 
+  // inbuffer, 
+  uint8_t inBuffer[UP_BUFSIZE];
+  uint16_t inBufferWp = 0;
+  // stash 
+  uint8_t temp[UP_BUFSIZE];
   // constructors 
   arduPortLink_t(Uart* _ser);
 };

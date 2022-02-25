@@ -17,6 +17,7 @@ import { PK, TS, VT, EP, TIMES } from '../osapjs/core/ts.js'
 
 import Grid from '../osapjs/client/interface/grid.js' // main drawing API 
 import { Button, EZButton, TextBlock, TextInput } from '../osapjs/client/interface/basics.js'
+import NetDoodler from '../osapjs/client/netrunner/netDoodler.js'
 
 console.log("hello mule ui")
 
@@ -87,24 +88,32 @@ jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
 
 // ---------------------------------------------- App... 
 
+let ddlr = new NetDoodler(120, 120)
+
 let runState = true
 let runBtn = new Button(10, 10, 100, 100, 'sweeping')
-runBtn.green()
 runBtn.onClick((evt) => {
   runState = !runState
-  if(runState){
-    runBtn.green()
-  } else {
-    runBtn.red()
-  }
+  checkRunState()
 })
 
 let collect = () => {
   if(!runState) return 
   osap.netRunner.sweep().then((net) => {
-    console.log('resolves', net)
+    ddlr.redraw(net)
     setTimeout(collect, 1000)
   })
 }
 
-setTimeout(collect, 500)
+let checkRunState = () => {
+  if(runState){
+    runBtn.green()
+    collect()
+  } else {
+    runBtn.red()
+  }
+}
+
+checkRunState()
+
+//setTimeout(collect, 250)

@@ -21,23 +21,37 @@ arduPortLink_t::arduPortLink_t(Uart* _ser){
 }
 
 void linkSetup(arduPortLink_t* link){
-  link->ser->begin(9600);
+  link->ser->begin(115200);
 }
 
 void linkLoop(arduPortLink_t* link, vertex_t* vt){
   while(link->ser->available()){
-    link->inBuffer[0][link->inBufferLen[0] ++] = link->ser->read();
-    if(link->inBufferLen[0] >= UP_BUFSIZE) break;
-  }
-  // rm for now, so we should just see a blink whenever we get bytes, 
-  if(link->inBufferLen[0] > 0){
-    link->inBufferLen[0] = 0;
-    ERRLIGHT_TOGGLE;
+    // read ahn byte, 
+    link->inBuffer[link->inBufferWp] = link->ser->read();
+    // check delineation, 
+    if(link->inBuffer[link->inBufferWp] == 0){
+      if(stackEmptySlot(vt, VT_STACK_ORIGIN)){
+        // load up, 
+        uint16_t len = cobsDecode(link->inBuffer, link->inBufferWp, link->temp);
+        stackLoadSlot(vt, VT_STACK_ORIGIN, link->temp, len);
+        // reset write ptr 
+        link->inBufferWp = 0;
+      } else {
+        // bad case: can miss 
+      }
+    } else {
+      // increment, but don't go over  
+      link->inBufferWp ++;
+      if(link->inBufferWp >= UP_BUFSIZE) link->inBufferWp = 0;
+    }
   }
 }
 
 void linkSend(arduPortLink_t* link, vport_t* vp, uint8_t* data, uint16_t len){
-  link->ser->write(data, len);
+  uint16_t encLen = cobsEncode(data, len, link->temp);
+  // stash delimiter 
+  link->temp[encLen] = 0;
+  link->ser->write(link->temp, encLen + 1);
 }
 
 boolean linkCTS(arduPortLink_t* link, vport_t* vp){

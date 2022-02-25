@@ -56,9 +56,6 @@ uint32_t tickTime = 100;
 
 void loop() {
   osapMainLoop(&root);
-  if(Serial1.availableForWrite()){
-    //Serial1.write(88);
-  }
   if(millis() > lastTick + tickTime){
     digitalWrite(13, !digitalRead(13));
     lastTick = millis();
