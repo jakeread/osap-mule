@@ -26,7 +26,7 @@ is; no warranty is provided, and users accept all liability.
 #define P2PLINK_KEY_PCK 170  // 0b10101010
 #define P2PLINK_KEY_ACK 171  // 0b10101011
 // retry settings 
-#define P2PLINK_RETRY_MACOUNT 3 
+#define P2PLINK_RETRY_MACOUNT 5 
 #define P2PLINK_RETRY_TIME 2000  // 255 * 10-bit uart byte * 3mhz = 850us 
 
 #define P2PLINK_LIGHT_ON_TIME 100 // in ms 
@@ -51,10 +51,16 @@ struct arduPortLink_t{
   uint8_t inBuffer[P2PLINK_BUFSIZE];
   uint8_t inBufferLen = 0;
   uint8_t inBufferWp = 0;
-  // outbuffer & read ptr,
-  uint8_t outBuffer[P2PLINK_BUFSIZE];
-  uint8_t outBufferLen = 0;
-  uint8_t outBufferRp = 0;
+  // outgoing packet (stash for retransmits)
+  uint8_t outPck[P2PLINK_BUFSIZE];
+  uint8_t outPckLen = 0;
+  // out transmit attmempts, etc:
+  uint8_t outNTA = 0; // number of transmit attempts, 
+  unsigned long outLTAT = 0; // last transmit attempt time 
+  // actually being tx'd: packets or ackets 
+  uint8_t txBuffer[P2PLINK_BUFSIZE];
+  uint8_t txBufferLen = 0;
+  uint8_t txBufferRp = 0;
   // out ack, 
   uint8_t ackAwaiting[4];
   boolean ackIsAwaiting = false;
