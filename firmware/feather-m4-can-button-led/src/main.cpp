@@ -86,11 +86,13 @@ void setup() {
 }
 
 uint32_t lastTick = 0;
-uint32_t tickTime = 50;
+uint32_t tickTime = 1;
 
 void loop() {
   // osap's gotta operate, 
+  ERRLIGHT_ON;
   osapMainLoop(&root);
+  ERRLIGHT_OFF;
   // endpoints have their own loop
   endpointMainLoop();
   // error light errand... 
