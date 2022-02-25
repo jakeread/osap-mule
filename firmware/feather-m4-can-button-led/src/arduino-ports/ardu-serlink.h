@@ -19,17 +19,17 @@ is; no warranty is provided, and users accept all liability.
 #include "../osape/core/vertex.h"
 
 // buffer is max 256 long for that sweet sweet uint8_t alignment 
-#define UP_BUFSIZE 255
+#define P2PLINK_BUFSIZE 255
 // -1 checksum, -1 packet id, -1 packet type, -2 cobs
-#define UP_SEGSIZE UP_BUFSIZE - 5
+#define P2PLINK_SEGSIZE P2PLINK_BUFSIZE - 5
 // packet keys; 
-#define UP_KEY_PCK 170  // 0b10101010
-#define UP_KEY_ACK 171  // 0b10101011
+#define P2PLINK_KEY_PCK 170  // 0b10101010
+#define P2PLINK_KEY_ACK 171  // 0b10101011
 // retry settings 
-#define UP_RETRY_MACOUNT 3 
-#define UP_RETRY_TIME 2000  // 255 * 10-bit uart byte * 3mhz = 850us 
+#define P2PLINK_RETRY_MACOUNT 3 
+#define P2PLINK_RETRY_TIME 2000  // 255 * 10-bit uart byte * 3mhz = 850us 
 
-#define UP_LIGHT_ON_TIME 100 // in ms 
+#define P2PLINK_LIGHT_ON_TIME 100 // in ms 
 
 typedef struct arduPortLink_t arduPortLink_t;
 
@@ -38,14 +38,32 @@ void linkLoop(arduPortLink_t* link, vertex_t* vt);
 void linkSend(arduPortLink_t* link, vport_t* vp, uint8_t* data, uint16_t len);
 boolean linkCTS(arduPortLink_t* link, vport_t* vp);
 
+// this one's internal, 
+void linkCheckOutputStates(arduPortLink_t* link);
+
+// note that we use uint8_t write ptrs / etc: and a size of 255, 
+// so we are never dealing w/ wraps etc, god bless 
+
 struct arduPortLink_t{
   // UART hardware:
   Uart* ser;
-  // inbuffer, 
-  uint8_t inBuffer[UP_BUFSIZE];
-  uint16_t inBufferWp = 0;
+  // inbuffer & write ptr,
+  uint8_t inBuffer[P2PLINK_BUFSIZE];
+  uint8_t inBufferLen = 0;
+  uint8_t inBufferWp = 0;
+  // outbuffer & read ptr,
+  uint8_t outBuffer[P2PLINK_BUFSIZE];
+  uint8_t outBufferLen = 0;
+  uint8_t outBufferRp = 0;
+  // out ack, 
+  uint8_t ackAwaiting[4];
+  boolean ackIsAwaiting = false;
+  // out id state, 
+  uint8_t nextPckIdTx = 1; // never zero... 
+  // in ack state, 
+  uint8_t lastPckIdRxd = 0; // init to zero, shouldn't ever be zero 
   // stash 
-  uint8_t temp[UP_BUFSIZE];
+  uint8_t temp[P2PLINK_BUFSIZE];
   // constructors 
   arduPortLink_t(Uart* _ser);
 };
