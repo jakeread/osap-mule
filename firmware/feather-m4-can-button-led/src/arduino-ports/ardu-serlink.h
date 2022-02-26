@@ -34,9 +34,9 @@ is; no warranty is provided, and users accept all liability.
 typedef struct arduPortLink_t arduPortLink_t;
 
 void linkSetup(arduPortLink_t* link);
-void linkLoop(arduPortLink_t* link, vertex_t* vt);
-void linkSend(arduPortLink_t* link, vport_t* vp, uint8_t* data, uint16_t len);
-boolean linkCTS(arduPortLink_t* link, vport_t* vp);
+void linkLoop(arduPortLink_t* link, Vertex* vt);
+void linkSend(arduPortLink_t* link, VPort* vp, uint8_t* data, uint16_t len);
+boolean linkCTS(arduPortLink_t* link, VPort* vp);
 
 // this one's internal, 
 void linkCheckOutputStates(arduPortLink_t* link);

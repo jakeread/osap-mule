@@ -16,11 +16,11 @@
 
 // ------------------------------------ Root Vertex 
 
-vertex_t root("osap-mule");
+Vertex root("osap-mule");
 
 // ------------------------------------ (to be improved) USB Serial 
 
-vport_t vp_usbSerial(
+VPort vp_usbSerial(
   &root, "usbSerial", 
   &vp_usbSerial_loop, 
   &vp_usbSerial_send, 
@@ -34,19 +34,19 @@ vport_t vp_usbSerial(
 arduPortLink_t ser1Link(&Serial1);
 
 // that hooks up to osap, 
-void loopFn(vertex_t* vt){
+void loopFn(Vertex* vt){
   linkLoop(&ser1Link, vt);
 }
 
-void sendFn(vport_t* vp, uint8_t* data, uint16_t len){
+void sendFn(VPort* vp, uint8_t* data, uint16_t len){
   linkSend(&ser1Link, vp, data, len);
 }
 
-boolean ctsFn(vport_t* vp){
+boolean ctsFn(VPort* vp){
   return linkCTS(&ser1Link, vp);
 }
 
-vport_t avp_ser1(&root, "arduino-ser", loopFn, sendFn, ctsFn);
+VPort avp_ser1(&root, "arduino-ser", loopFn, sendFn, ctsFn);
 
 // ------------------------------------ Button Endpoint
 
@@ -55,7 +55,7 @@ uint8_t btn_up[1] = {0};
 //uint8_t btn_route[3] = { PK_SIB_KEY, 3, 0 };
 uint8_t btn_route[7] = { PK_SIB_KEY, 1, 0, PK_PFWD_KEY, PK_SIB_KEY, 3, 0 };
 
-endpoint_t ep_button(&root, "button");
+Endpoint ep_button(&root, "button");
 
 // ------------------------------------ LED Endpoint 
 
@@ -69,7 +69,7 @@ EP_ONDATA_RESPONSES onLEDData(uint8_t* data, uint16_t len){
   return EP_ONDATA_ACCEPT;
 }
 
-endpoint_t ep_led(&root, "led", onLEDData);
+Endpoint ep_led(&root, "led", onLEDData);
 
 // ------------------------------------ Arduino Stuff 
 

@@ -22,10 +22,10 @@ no warranty is provided, and users accept all liability.
 #define VPUSB_SPACE_SIZE 512
 
 // uuuuh classes are cancelled? 
-void vp_usbSerial_setup(vport_t* vp);
-void vp_usbSerial_loop(vertex_t* vt);
-void vp_usbSerial_onOriginStackClear(vertex_t* vt, uint8_t slot);
-boolean vp_usbSerial_cts(vport_t* vp);
-void vp_usbSerial_send(vport_t* vp, uint8_t* data, uint16_t len);
+void vp_usbSerial_setup(VPort* vp);
+void vp_usbSerial_loop(Vertex* vt);
+void vp_usbSerial_onOriginStackClear(Vertex* vt, uint8_t slot);
+boolean vp_usbSerial_cts(VPort* vp);
+void vp_usbSerial_send(VPort* vp, uint8_t* data, uint16_t len);
 
 #endif

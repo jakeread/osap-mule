@@ -28,7 +28,7 @@ void linkSetup(arduPortLink_t* link){
 // structured like:
 // checksum | pck/ack key | pck id | cobs encoded data | 0 
 
-void linkLoop(arduPortLink_t* link, vertex_t* vt){
+void linkLoop(arduPortLink_t* link, Vertex* vt){
   // byte injestion: think of this like the rx interrupt stage, 
   while(link->ser->available() && link->inBufferLen == 0){
     // read ahn byte, 
@@ -82,7 +82,7 @@ void linkLoop(arduPortLink_t* link, vertex_t* vt){
   linkCheckOutputStates(link);
 }
 
-void linkSend(arduPortLink_t* link, vport_t* vp, uint8_t* data, uint16_t len){
+void linkSend(arduPortLink_t* link, VPort* vp, uint8_t* data, uint16_t len){
   // double guard?
   if(!linkCTS(link, vp)) return;
   // setup,
@@ -103,7 +103,7 @@ void linkSend(arduPortLink_t* link, vport_t* vp, uint8_t* data, uint16_t len){
   linkCheckOutputStates(link);
 }
 
-boolean linkCTS(arduPortLink_t* link, vport_t* vp){
+boolean linkCTS(arduPortLink_t* link, VPort* vp){
   // if outBuffer is occupied, this msg not done txing 
   return (link->outPckLen == 0) ? true : false;
 }

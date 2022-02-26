@@ -31,11 +31,11 @@ uint8_t _acksAwaiting = 0;
 uint8_t _encodedOut[VPUSB_SPACE_SIZE];
 uint8_t _encodedIn[VPUSB_SPACE_SIZE];
 
-void vp_usbSerial_setup(vport_t* vp){
+void vp_usbSerial_setup(VPort* vp){
   Serial.begin(9600);
 }
 
-void vp_usbSerial_loop(vertex_t* vt){
+void vp_usbSerial_loop(Vertex* vt){
   // want to count through previous occupied-ness states, and on falling edge
   // of stack education, ack... 
   // ack if necessary (if didn't tx ack out on reciprocal send last)
@@ -69,19 +69,19 @@ void vp_usbSerial_loop(vertex_t* vt){
 }
 
 // to clear packets out... for us to track flowcontrol
-void vp_usbSerial_onOriginStackClear(vertex_t* vt, uint8_t slot){
+void vp_usbSerial_onOriginStackClear(Vertex* vt, uint8_t slot){
   // this is all, 
   _acksAwaiting ++;
 }
 
 // there's at the moment no usb -> up flowcontrol 
-boolean vp_usbSerial_cts(vport_t* vp){
+boolean vp_usbSerial_cts(VPort* vp){
   return true;
 }
 
 uint8_t _shift[VPUSB_SPACE_SIZE];
 
-void vp_usbSerial_send(vport_t* vp, uint8_t* data, uint16_t len){
+void vp_usbSerial_send(VPort* vp, uint8_t* data, uint16_t len){
   // damn, this is not fast: shifting one byte in for acks,
   // probably faster than sending seperate packet though 
   _shift[0] = _acksAwaiting;
