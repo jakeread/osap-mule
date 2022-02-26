@@ -31,22 +31,7 @@ VPort vp_usbSerial(
 // ------------------------------------ UART "Port"
 
 // we want a link object, 
-arduPortLink_t ser1Link(&Serial1);
-
-// that hooks up to osap, 
-void loopFn(Vertex* vt){
-  linkLoop(&ser1Link, vt);
-}
-
-void sendFn(VPort* vp, uint8_t* data, uint16_t len){
-  linkSend(&ser1Link, vp, data, len);
-}
-
-boolean ctsFn(VPort* vp){
-  return linkCTS(&ser1Link, vp);
-}
-
-VPort avp_ser1(&root, "arduino-ser", loopFn, sendFn, ctsFn);
+ArduLinkSerial ser1Link(&root, "arduinoSer1", &Serial1);
 
 // ------------------------------------ Button Endpoint
 
@@ -80,30 +65,28 @@ void setup() {
   pinMode(BUTTON_PIN, INPUT);
   // this vv is a little confusing for the people, innit? 
   vp_usbSerial_setup(&vp_usbSerial);
-  linkSetup(&ser1Link);
+  ser1Link.begin(1000000);
   // setup a route... 
-  endpointAddRoute(&ep_button, btn_route, 7, EP_ROUTE_ACKED);
+  ep_button.addRoute(btn_route, 7, EP_ROUTE_ACKED);
 }
 
 uint32_t lastTick = 0;
-uint32_t tickTime = 1;
+uint32_t tickTime = 50;
 
 void loop() {
   // osap's gotta operate, 
-  ERRLIGHT_ON;
+  //ERRLIGHT_ON;
   osapMainLoop(&root);
-  ERRLIGHT_OFF;
-  // endpoints have their own loop
-  endpointMainLoop();
+  //ERRLIGHT_OFF;
   // error light errand... 
   sysErrLightCheck();
   // clock light errand... 
   if(millis() > lastTick + tickTime){
       // button pusher,
     if(!digitalRead(BUTTON_PIN)){
-      endpointWrite(&ep_button, btn_down, 2);
+      ep_button.write(btn_down, 2);
     } else {
-      endpointWrite(&ep_button, btn_up, 2);
+      ep_button.write(btn_up, 2);
     }
     // clk 
     digitalWrite(13, !digitalRead(13));

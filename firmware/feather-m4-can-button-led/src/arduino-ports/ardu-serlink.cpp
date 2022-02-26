@@ -16,134 +16,136 @@ is; no warranty is provided, and users accept all liability.
 #include "./osape/utils/cobs.h"
 #include "./osap_debug.h"
 
-arduPortLink_t::arduPortLink_t(Uart* _ser){
+ArduLinkSerial::ArduLinkSerial( Vertex* _parent, String _name, Uart* _ser
+) : VPort ( _parent, _name ){
   ser = _ser;
 }
 
-void linkSetup(arduPortLink_t* link){
-  link->ser->begin(1000000);
+void ArduLinkSerial::begin(uint32_t baudRate){
+  ser->begin(baudRate);
 }
 
 // link packets are max 256 bytes in length, including the 0 delimiter 
 // structured like:
 // checksum | pck/ack key | pck id | cobs encoded data | 0 
 
-void linkLoop(arduPortLink_t* link, Vertex* vt){
-  // byte injestion: think of this like the rx interrupt stage, 
-  while(link->ser->available() && link->inBufferLen == 0){
+void ArduLinkSerial::loop(void){
+    // byte injestion: think of this like the rx interrupt stage, 
+  while(ser->available() && inBufferLen == 0){
     // read ahn byte, 
-    link->inBuffer[link->inBufferWp ++] = link->ser->read();
+    inBuffer[inBufferWp ++] = ser->read();
     // check delineation: the - 1 index might seem odd but is always incremented just above 
-    if(link->inBuffer[link->inBufferWp - 1] == 0){
-      if(link->inBuffer[0] != link->inBufferWp){
+    if(inBuffer[inBufferWp - 1] == 0){
+      if(inBuffer[0] != inBufferWp){
         // checksum failure, 
-        ERROR(3, "p2p bad checksum, wp = " + String(link->inBufferWp) + " cs = " + String(link->inBuffer[0]));
-      } else if (link->inBuffer[1] == P2PLINK_KEY_ACK){
+        ERROR(3, "p2p bad checksum, wp = " + String(inBufferWp) + " cs = " + String(inBuffer[0]));
+      } else if (inBuffer[1] == P2PLINK_KEY_ACK){
         // it's an ack, we can read direct, 
-        if(link->inBuffer[2] == link->outPck[2]){
+        if(inBuffer[2] == outPck[2]){
           // if IDs match, we are now clear downstream, no further action, 
-          link->outPckLen = 0;
+          outPckLen = 0;
         } // if no match, might be 2nd ack for previously cleared, idk 
-      } else if (link->inBuffer[1] == P2PLINK_KEY_PCK){
+      } else if (inBuffer[1] == P2PLINK_KEY_PCK){
         // it's a packet, check this corner case where we rx same pckt twice, 
-        if(link->inBuffer[2] == link->lastPckIdRxd){
+        if(inBuffer[2] == lastPckIdRxd){
           // duplicate, it'll be ignored 
           ERROR(3, "p2p duplicate rx");
         } else {
           // looks like a new packet, track that state
-          link->lastPckIdRxd = link->inBuffer[2];
+          lastPckIdRxd = inBuffer[2];
           // then set fullness, will get picked up on load check 
-          link->inBufferLen = link->inBufferWp;
+          inBufferLen = inBufferWp;
         }
       } // the final case would be an unrecognized key, we bail on that as well, 
       // after *any* delimiter, we reset this,
-      link->inBufferWp = 0;
+      inBufferWp = 0;
     } // end delineated case, 
   } // end while(avail) 
 
   // load check, 
-  if(link->inBufferLen > 0){
-    if(stackEmptySlot(vt, VT_STACK_ORIGIN)){
+  if(inBufferLen > 0){
+    if(stackEmptySlot(this, VT_STACK_ORIGIN)){
       // load up... this adds a 2nd memcpy that'd be tite to delete 
-      uint16_t len = cobsDecode(&(link->inBuffer[3]), link->inBufferLen - 4, link->temp);
-      stackLoadSlot(vt, VT_STACK_ORIGIN, link->temp, len);
+      uint16_t len = cobsDecode(&(inBuffer[3]), inBufferLen - 4, temp);
+      stackLoadSlot(this, VT_STACK_ORIGIN, temp, len);
       // we need to issue an ack, 
-      link->ackAwaiting[0] = 4; // checksum, always this, msg (incl. delimiter) is 4 bytes 
-      link->ackAwaiting[1] = P2PLINK_KEY_ACK;
-      link->ackAwaiting[2] = link->inBuffer[2]; // ack ID is pck ID 
-      link->ackAwaiting[3] = 0; // delimiter
-      link->ackIsAwaiting = true;
+      ackAwaiting[0] = 4; // checksum, always this, msg (incl. delimiter) is 4 bytes 
+      ackAwaiting[1] = P2PLINK_KEY_ACK;
+      ackAwaiting[2] = inBuffer[2]; // ack ID is pck ID 
+      ackAwaiting[3] = 0; // delimiter
+      ackIsAwaiting = true;
       // and we're now clear to read in, 
-      link->inBufferLen = 0;
+      inBufferLen = 0;
     } // end stack slot available, we'll just be awaiting here... 
   }
 
   // check & execute actual tx 
-  linkCheckOutputStates(link);
+  checkOutputStates();
 }
 
-void linkSend(arduPortLink_t* link, VPort* vp, uint8_t* data, uint16_t len){
+void ArduLinkSerial::send(uint8_t* data, uint16_t len){
   // double guard?
-  if(!linkCTS(link, vp)) return;
+  if(!cts()) return;
+  // setup, 
   // setup,
-  link->outPck[0] = len + 5; // len + 0 delimiter & cobs start + id + key + checksum
-  link->outPck[1] = P2PLINK_KEY_PCK;
-  link->outPck[2] = link->nextPckIdTx;
-  link->nextPckIdTx ++; if(link->nextPckIdTx == 0) link->nextPckIdTx = 1;
+  outPck[0] = len + 5; // len + 0 delimiter & cobs start + id + key + checksum
+  outPck[1] = P2PLINK_KEY_PCK;
+  outPck[2] = nextPckIdTx;
+  nextPckIdTx ++; if(nextPckIdTx == 0) nextPckIdTx = 1;
   // encode in... stuffing after header & adding tail zero 
-  link->outPckLen = cobsEncode(data, len, &(link->outPck[3]));
+  outPckLen = cobsEncode(data, len, &(outPck[3]));
   // cobsEncode reports length of encode *without* the addnl delimiter, 
   // so just len + 1, 1 being the 1st byte that COBs inserts. we add an addnl 3, id, key, checksum,
-  link->outPckLen += 4; 
-  link->outPck[link->outPckLen - 1] = 0;
+  outPckLen += 4; 
+  outPck[outPckLen - 1] = 0;
   // other output settings 
-  link->outNTA = 0;
-  link->outLTAT = 0;
+  outNTA = 0;
+  outLTAT = 0;
   // check output: expedite this if we can, 
-  linkCheckOutputStates(link);
+  checkOutputStates();
 }
 
-boolean linkCTS(arduPortLink_t* link, VPort* vp){
-  // if outBuffer is occupied, this msg not done txing 
-  return (link->outPckLen == 0) ? true : false;
+// we are CTS if outPck is not occupied, 
+boolean ArduLinkSerial::cts(void){
+  return (outPckLen == 0);
 }
 
-void linkCheckOutputStates(arduPortLink_t* link){
+void ArduLinkSerial::checkOutputStates(void){
   // can we setup a new tx buffer? only if no action on existing transmit, 
-  if(link->txBufferLen == 0 && link->txBufferRp == 0){
+  if(txBufferLen == 0 && txBufferRp == 0){
     // acks prioritized, 
-    if(link->ackIsAwaiting){
+    if(ackIsAwaiting){
       // simple, we copy in and tx, 
-      memcpy(link->txBuffer, link->ackAwaiting, 4);
-      link->ackIsAwaiting = false;
-      link->txBufferLen = 4;
-    } else if (link->outPckLen > 0){
+      memcpy(txBuffer, ackAwaiting, 4);
+      ackIsAwaiting = false;
+      txBufferLen = 4;
+    } else if (outPckLen > 0){
       // we are still awaiting completion of this pck's tx... 
       unsigned long now = micros();
       // transmit states,
-      if(link->outNTA == 0 || (link->outLTAT + P2PLINK_RETRY_TIME < now && link->outNTA < P2PLINK_RETRY_MACOUNT)){
+      if(outNTA == 0 || (outLTAT + P2PLINK_RETRY_TIME < now && outNTA < P2PLINK_RETRY_MACOUNT)){
         // first transmit, or time's up & haven't retried too many times, 
-        memcpy(link->txBuffer, link->outPck, link->outPckLen);
-        link->txBufferLen = link->outPckLen;
-        link->outNTA ++;
-        link->outLTAT = now;
-      } else if (link->outLTAT + P2PLINK_RETRY_TIME > now){
+        memcpy(txBuffer, outPck, outPckLen);
+        txBufferLen = outPckLen;
+        outNTA ++;
+        outLTAT = now;
+      } else if (outLTAT + P2PLINK_RETRY_TIME > now){
         // waiting to retransmit, 
       } else {
         // time's up & we're over retransmit count 
-        link->outPckLen = 0;
+        outPckLen = 0;
       }
     }
   } // end new txbuffer, 
 
   // finally, we write out so long as we can: we aren't guaranteed to get whole pckts out in each fn call 
-  while(link->ser->availableForWrite() && link->txBufferLen != 0){
+  while(ser->availableForWrite() && txBufferLen != 0){
     // output next byte, 
-    link->ser->write(link->txBuffer[link->txBufferRp ++]);
+    ser->write(txBuffer[txBufferRp ++]);
     // check for end of buffer; reset transmit states if so 
-    if(link->txBufferRp >= link->txBufferLen) {
-      link->txBufferLen = 0; 
-      link->txBufferRp = 0;
+    if(txBufferRp >= txBufferLen) {
+      txBufferLen = 0; 
+      txBufferRp = 0;
     }
   }
 }

@@ -31,47 +31,46 @@ is; no warranty is provided, and users accept all liability.
 
 #define P2PLINK_LIGHT_ON_TIME 100 // in ms 
 
-typedef struct arduPortLink_t arduPortLink_t;
-
-void linkSetup(arduPortLink_t* link);
-void linkLoop(arduPortLink_t* link, Vertex* vt);
-void linkSend(arduPortLink_t* link, VPort* vp, uint8_t* data, uint16_t len);
-boolean linkCTS(arduPortLink_t* link, VPort* vp);
-
-// this one's internal, 
-void linkCheckOutputStates(arduPortLink_t* link);
-
 // note that we use uint8_t write ptrs / etc: and a size of 255, 
 // so we are never dealing w/ wraps etc, god bless 
 
-struct arduPortLink_t{
-  // UART hardware:
-  Uart* ser;
-  // inbuffer & write ptr,
-  uint8_t inBuffer[P2PLINK_BUFSIZE];
-  uint8_t inBufferLen = 0;
-  uint8_t inBufferWp = 0;
-  // outgoing packet (stash for retransmits)
-  uint8_t outPck[P2PLINK_BUFSIZE];
-  uint8_t outPckLen = 0;
-  // out transmit attmempts, etc:
-  uint8_t outNTA = 0; // number of transmit attempts, 
-  unsigned long outLTAT = 0; // last transmit attempt time 
-  // actually being tx'd: packets or ackets 
-  uint8_t txBuffer[P2PLINK_BUFSIZE];
-  uint8_t txBufferLen = 0;
-  uint8_t txBufferRp = 0;
-  // out ack, 
-  uint8_t ackAwaiting[4];
-  boolean ackIsAwaiting = false;
-  // out id state, 
-  uint8_t nextPckIdTx = 1; // never zero... 
-  // in ack state, 
-  uint8_t lastPckIdRxd = 0; // init to zero, shouldn't ever be zero 
-  // stash 
-  uint8_t temp[P2PLINK_BUFSIZE];
-  // constructors 
-  arduPortLink_t(Uart* _ser);
+class ArduLinkSerial : public VPort {
+  public:
+    // arduino std begin 
+    void begin(uint32_t baud);
+    // -------------------------------- our own gd send & cts & loop fns, 
+    void loop(void) override;
+    void checkOutputStates(void);
+    void send(uint8_t* data, uint16_t len) override;
+    boolean cts(void) override;
+    // -------------------------------- Data 
+    // UART hardware:
+    Uart* ser;
+    // inbuffer & write ptr,
+    uint8_t inBuffer[P2PLINK_BUFSIZE];
+    uint8_t inBufferLen = 0;
+    uint8_t inBufferWp = 0;
+    // outgoing packet (stash for retransmits)
+    uint8_t outPck[P2PLINK_BUFSIZE];
+    uint8_t outPckLen = 0;
+    // out transmit attmempts, etc:
+    uint8_t outNTA = 0; // number of transmit attempts, 
+    unsigned long outLTAT = 0; // last transmit attempt time 
+    // actually being tx'd: packets or ackets 
+    uint8_t txBuffer[P2PLINK_BUFSIZE];
+    uint8_t txBufferLen = 0;
+    uint8_t txBufferRp = 0;
+    // out ack, 
+    uint8_t ackAwaiting[4];
+    boolean ackIsAwaiting = false;
+    // out id state, 
+    uint8_t nextPckIdTx = 1; // never zero... 
+    // in ack state, 
+    uint8_t lastPckIdRxd = 0; // init to zero, shouldn't ever be zero 
+    // stash 
+    uint8_t temp[P2PLINK_BUFSIZE];
+    // -------------------------------- Constructors 
+    ArduLinkSerial(Vertex* _parent, String _name, Uart* _ser);
 };
 
 #endif 
