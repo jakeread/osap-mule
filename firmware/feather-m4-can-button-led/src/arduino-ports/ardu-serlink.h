@@ -26,7 +26,7 @@ is; no warranty is provided, and users accept all liability.
 #define P2PLINK_KEY_PCK 170  // 0b10101010
 #define P2PLINK_KEY_ACK 171  // 0b10101011
 // retry settings 
-#define P2PLINK_RETRY_MACOUNT 5 
+#define P2PLINK_RETRY_MACOUNT 2
 #define P2PLINK_RETRY_TIME 2000  // 255 * 10-bit uart byte * 3mhz = 850us 
 
 #define P2PLINK_LIGHT_ON_TIME 100 // in ms 
@@ -46,11 +46,13 @@ class ArduLinkSerial : public VPort {
     // -------------------------------- Data 
     // UART hardware:
     Uart* ser;
-    // inbuffer & write ptr,
-    uint8_t inBuffer[P2PLINK_BUFSIZE];
+    // inbuffer & write ptr, and head / tail just swap 1:1 
+    uint8_t inHead = 0; // write 2 this 
+    uint8_t inTail = 1; // read from this 
+    uint8_t inBuffer[2][P2PLINK_BUFSIZE];
     uint8_t inBufferLen = 0;
     uint8_t inBufferWp = 0;
-    // outgoing packet (stash for retransmits)
+    // outgoing packet (stashed for retransmits)
     uint8_t outPck[P2PLINK_BUFSIZE];
     uint8_t outPckLen = 0;
     // out transmit attmempts, etc:

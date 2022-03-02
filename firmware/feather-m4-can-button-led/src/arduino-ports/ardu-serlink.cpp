@@ -30,53 +30,54 @@ void ArduLinkSerial::begin(uint32_t baudRate){
 // checksum | pck/ack key | pck id | cobs encoded data | 0 
 
 void ArduLinkSerial::loop(void){
-    // byte injestion: think of this like the rx interrupt stage, 
-  while(ser->available() && inBufferLen == 0){
-    // read ahn byte, 
-    inBuffer[inBufferWp ++] = ser->read();
+  // byte injestion: think of this like the rx interrupt stage, 
+  while(ser->available()){
+    // read byte into the current stub, 
+    inBuffer[inHead][inBufferWp ++] = ser->read();
     // check delineation: the - 1 index might seem odd but is always incremented just above 
-    if(inBuffer[inBufferWp - 1] == 0){
-      if(inBuffer[0] != inBufferWp){
+    if(inBuffer[inHead][inBufferWp - 1] == 0){
+      digitalWrite(A4, !digitalRead(A4));
+      if(inBuffer[inHead][0] != inBufferWp){
         // checksum failure, 
-        ERROR(3, "p2p bad checksum, wp = " + String(inBufferWp) + " cs = " + String(inBuffer[0]));
-      } else if (inBuffer[1] == P2PLINK_KEY_ACK){
+        ERROR(3, "p2p bad checksum, wp = " + String(inBufferWp) + " cs = " + String(inBuffer[inHead][0]));
+      } else if (inBuffer[inHead][1] == P2PLINK_KEY_ACK){
         // it's an ack, we can read direct, 
-        if(inBuffer[2] == outPck[2]){
-          // if IDs match, we are now clear downstream, no further action, 
-          outPckLen = 0;
-        } // if no match, might be 2nd ack for previously cleared, idk 
-      } else if (inBuffer[1] == P2PLINK_KEY_PCK){
-        // it's a packet, check this corner case where we rx same pckt twice, 
-        if(inBuffer[2] == lastPckIdRxd){
-          // duplicate, it'll be ignored 
-          ERROR(3, "p2p duplicate rx");
+        //if(inBuffer[inHead][2] == outPck[2]){
+        // if IDs match, we are now clear downstream, no further action, 
+        outPckLen = 0;
+        //} // if no match, might be 2nd ack for previously cleared, idk 
+      } else if (inBuffer[inHead][1] == P2PLINK_KEY_PCK && inBufferLen == 0){
+        // new packet, so heads are tails;
+        if(inHead){
+          inHead = 0; inTail = 1;
         } else {
-          // looks like a new packet, track that state
-          lastPckIdRxd = inBuffer[2];
-          // then set fullness, will get picked up on load check 
-          inBufferLen = inBufferWp;
+          inHead = 1; inTail = 0;
         }
-      } // the final case would be an unrecognized key, we bail on that as well, 
+        // new, live pckt now at inBuffer[inTail]
+        lastPckIdRxd = inBuffer[inTail][2];
+        // then set fullness, will get picked up on load check 
+        inBufferLen = inBufferWp;
+      } else {
+        // these are failed packets ... we don't need to do anything 
+      }
       // after *any* delimiter, we reset this,
       inBufferWp = 0;
     } // end delineated case, 
   } // end while(avail) 
 
   // load check, 
-  if(inBufferLen > 0){
-    if(stackEmptySlot(this, VT_STACK_ORIGIN)){
-      // load up... this adds a 2nd memcpy that'd be tite to delete 
-      uint16_t len = cobsDecode(&(inBuffer[3]), inBufferLen - 4, temp);
-      stackLoadSlot(this, VT_STACK_ORIGIN, temp, len);
-      // we need to issue an ack, 
-      ackAwaiting[0] = 4; // checksum, always this, msg (incl. delimiter) is 4 bytes 
-      ackAwaiting[1] = P2PLINK_KEY_ACK;
-      ackAwaiting[2] = inBuffer[2]; // ack ID is pck ID 
-      ackAwaiting[3] = 0; // delimiter
-      ackIsAwaiting = true;
-      // and we're now clear to read in, 
-      inBufferLen = 0;
-    } // end stack slot available, we'll just be awaiting here... 
+  if(inBufferLen > 0 && stackEmptySlot(this, VT_STACK_ORIGIN)){
+    // load up... this adds a 2nd memcpy that'd be tite to delete 
+    uint16_t len = cobsDecode(&(inBuffer[inTail][3]), inBufferLen - 4, temp);
+    stackLoadSlot(this, VT_STACK_ORIGIN, temp, len);
+    // we need to issue an ack, 
+    ackAwaiting[0] = 4; // checksum, always this, msg (incl. delimiter) is 4 bytes 
+    ackAwaiting[1] = P2PLINK_KEY_ACK;
+    ackAwaiting[2] = inBuffer[inTail][2]; // ack ID is pck ID 
+    ackAwaiting[3] = 0; // delimiter
+    ackIsAwaiting = true;
+    // and we're now clear to read in, 
+    inBufferLen = 0;
   }
 
   // check & execute actual tx 
@@ -102,7 +103,7 @@ void ArduLinkSerial::send(uint8_t* data, uint16_t len){
   outNTA = 0;
   outLTAT = 0;
   // check output: expedite this if we can, 
-  checkOutputStates();
+  // checkOutputStates();
 }
 
 // we are CTS if outPck is not occupied, 
@@ -132,13 +133,14 @@ void ArduLinkSerial::checkOutputStates(void){
       } else if (outLTAT + P2PLINK_RETRY_TIME > now){
         // waiting to retransmit, 
       } else {
-        // time's up & we're over retransmit count 
+        // time's up & we're over retransmit count, this deletes, 
         outPckLen = 0;
       }
     }
   } // end new txbuffer, 
 
-  // finally, we write out so long as we can: we aren't guaranteed to get whole pckts out in each fn call 
+  // finally, we write out so long as we can: 
+  // we aren't guaranteed to get whole pckts out in each fn call 
   while(ser->availableForWrite() && txBufferLen != 0){
     // output next byte, 
     ser->write(txBuffer[txBufferRp ++]);

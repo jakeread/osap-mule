@@ -61,6 +61,7 @@ Endpoint ep_led(&root, "led", onLEDData);
 void setup() {
   pinMode(13, OUTPUT);  // 'clklight'
   pinMode(5, OUTPUT);   // 'errlight'
+  pinMode(A4, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT);
   // this vv is a little confusing for the people, innit? 
@@ -71,23 +72,31 @@ void setup() {
 }
 
 uint32_t lastTick = 0;
-uint32_t tickTime = 50;
+uint32_t tickTime = 10;
 
 void loop() {
   // osap's gotta operate, 
   //ERRLIGHT_ON;
   osapMainLoop(&root);
+  // should look like osap.loop(); for the sake of arduino-ness 
   //ERRLIGHT_OFF;
   // error light errand... 
   sysErrLightCheck();
+  //digitalWrite(A4, HIGH);
+  // high speed
+  if(!digitalRead(BUTTON_PIN)){
+    ep_button.write(btn_down, 2);
+  } else {
+    ep_button.write(btn_up, 2);
+  }
   // clock light errand... 
   if(millis() > lastTick + tickTime){
-      // button pusher,
-    if(!digitalRead(BUTTON_PIN)){
-      ep_button.write(btn_down, 2);
-    } else {
-      ep_button.write(btn_up, 2);
-    }
+    // button pusher,
+    // if(!digitalRead(BUTTON_PIN)){
+    //   ep_button.write(btn_down, 2);
+    // } else {
+    //   ep_button.write(btn_up, 2);
+    // }
     // clk 
     digitalWrite(13, !digitalRead(13));
     lastTick = millis();
