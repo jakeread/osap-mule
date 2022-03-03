@@ -37,15 +37,20 @@ ArduLinkSerial ser1Link(&root, "arduinoSer1", &Serial1);
 
 uint8_t btn_down[1] = {1};
 uint8_t btn_up[1] = {0};
-//uint8_t btn_route[3] = { PK_SIB_KEY, 3, 0 };
-uint8_t btn_route[7] = { PK_SIB_KEY, 1, 0, PK_PFWD_KEY, PK_SIB_KEY, 3, 0 };
+#define BTN_ROUTE_LEN 7
+// 3 
+// uint8_t btn_route[BTN_ROUTE_LEN] = { PK_SIB_KEY, 3, 0 };
+// 7
+uint8_t btn_route[BTN_ROUTE_LEN] = { PK_SIB_KEY, 1, 0, PK_PFWD_KEY, PK_SIB_KEY, 3, 0 };
 
 Endpoint ep_button(&root, "button");
 
 // ------------------------------------ LED Endpoint 
 
+unsigned long lastDataPull = 0;
+
 EP_ONDATA_RESPONSES onLEDData(uint8_t* data, uint16_t len){
-  //digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+  //digitalWrite(A4, !digitalRead(A4));
   if(data[0]){
     digitalWrite(LED_PIN, HIGH);
   } else {
@@ -68,11 +73,11 @@ void setup() {
   vp_usbSerial_setup(&vp_usbSerial);
   ser1Link.begin(1000000);
   // setup a route... 
-  ep_button.addRoute(btn_route, 7, EP_ROUTE_ACKED);
+  ep_button.addRoute(btn_route, BTN_ROUTE_LEN, EP_ROUTE_ACKED);
 }
 
 uint32_t lastTick = 0;
-uint32_t tickTime = 10;
+uint32_t tickTime = 50;
 
 void loop() {
   // osap's gotta operate, 
@@ -84,19 +89,19 @@ void loop() {
   sysErrLightCheck();
   //digitalWrite(A4, HIGH);
   // high speed
-  if(!digitalRead(BUTTON_PIN)){
-    ep_button.write(btn_down, 2);
-  } else {
-    ep_button.write(btn_up, 2);
-  }
+  // if(!digitalRead(BUTTON_PIN)){
+  //   ep_button.write(btn_down, 2);
+  // } else {
+  //   ep_button.write(btn_up, 2);
+  // }
   // clock light errand... 
   if(millis() > lastTick + tickTime){
     // button pusher,
-    // if(!digitalRead(BUTTON_PIN)){
-    //   ep_button.write(btn_down, 2);
-    // } else {
-    //   ep_button.write(btn_up, 2);
-    // }
+    if(!digitalRead(BUTTON_PIN)){
+      ep_button.write(btn_down, 2);
+    } else {
+      ep_button.write(btn_up, 2);
+    }
     // clk 
     digitalWrite(13, !digitalRead(13));
     lastTick = millis();

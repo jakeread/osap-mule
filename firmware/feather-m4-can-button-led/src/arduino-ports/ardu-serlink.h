@@ -46,29 +46,14 @@ class ArduLinkSerial : public VPort {
     // -------------------------------- Data 
     // UART hardware:
     Uart* ser;
-    // inbuffer & write ptr, and head / tail just swap 1:1 
-    uint8_t inHead = 0; // write 2 this 
-    uint8_t inTail = 1; // read from this 
-    uint8_t inBuffer[2][P2PLINK_BUFSIZE];
-    uint8_t inBufferLen = 0;
-    uint8_t inBufferWp = 0;
-    // outgoing packet (stashed for retransmits)
-    uint8_t outPck[P2PLINK_BUFSIZE];
-    uint8_t outPckLen = 0;
-    // out transmit attmempts, etc:
-    uint8_t outNTA = 0; // number of transmit attempts, 
-    unsigned long outLTAT = 0; // last transmit attempt time 
-    // actually being tx'd: packets or ackets 
+    // outgoing buffer,
     uint8_t txBuffer[P2PLINK_BUFSIZE];
     uint8_t txBufferLen = 0;
     uint8_t txBufferRp = 0;
-    // out ack, 
-    uint8_t ackAwaiting[4];
-    boolean ackIsAwaiting = false;
-    // out id state, 
-    uint8_t nextPckIdTx = 1; // never zero... 
-    // in ack state, 
-    uint8_t lastPckIdRxd = 0; // init to zero, shouldn't ever be zero 
+    // incoming, 
+    uint8_t rxBuffer[P2PLINK_BUFSIZE];
+    uint8_t rxBufferLen = 0;
+    uint8_t rxBufferWp = 0;
     // stash 
     uint8_t temp[P2PLINK_BUFSIZE];
     // -------------------------------- Constructors 

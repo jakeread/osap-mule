@@ -31,55 +31,33 @@ void ArduLinkSerial::begin(uint32_t baudRate){
 
 void ArduLinkSerial::loop(void){
   // byte injestion: think of this like the rx interrupt stage, 
-  while(ser->available()){
+  while(ser->available() && rxBufferLen == 0){
     // read byte into the current stub, 
-    inBuffer[inHead][inBufferWp ++] = ser->read();
-    // check delineation: the - 1 index might seem odd but is always incremented just above 
-    if(inBuffer[inHead][inBufferWp - 1] == 0){
-      digitalWrite(A4, !digitalRead(A4));
-      if(inBuffer[inHead][0] != inBufferWp){
-        // checksum failure, 
-        ERROR(3, "p2p bad checksum, wp = " + String(inBufferWp) + " cs = " + String(inBuffer[inHead][0]));
-      } else if (inBuffer[inHead][1] == P2PLINK_KEY_ACK){
-        // it's an ack, we can read direct, 
-        //if(inBuffer[inHead][2] == outPck[2]){
-        // if IDs match, we are now clear downstream, no further action, 
-        outPckLen = 0;
-        //} // if no match, might be 2nd ack for previously cleared, idk 
-      } else if (inBuffer[inHead][1] == P2PLINK_KEY_PCK && inBufferLen == 0){
-        // new packet, so heads are tails;
-        if(inHead){
-          inHead = 0; inTail = 1;
-        } else {
-          inHead = 1; inTail = 0;
-        }
-        // new, live pckt now at inBuffer[inTail]
-        lastPckIdRxd = inBuffer[inTail][2];
-        // then set fullness, will get picked up on load check 
-        inBufferLen = inBufferWp;
+    rxBuffer[rxBufferWp ++] = ser->read();
+    if(rxBuffer[rxBufferWp - 1] == 0){
+      rxBufferLen = rxBufferWp;
+      // always reset on delimiter, 
+      rxBufferWp = 0;
+    }
+  } // end while-receive 
+
+  // check for new pcks, 
+  if(rxBufferLen){
+    if(rxBuffer[0] != rxBufferLen){
+      ERROR(3, "p2p bad checksum, wp = " + String(rxBufferLen) + " cs = " + String(rxBuffer[0]));
+    } else {
+      // can we write it ?
+      if(stackEmptySlot(this, VT_STACK_ORIGIN)){
+        digitalWrite(A4, !digitalRead(A4));
+        uint16_t len = cobsDecode(&(rxBuffer[1]), rxBufferLen - 1, temp);
+        stackLoadSlot(this, VT_STACK_ORIGIN, temp, len);
       } else {
-        // these are failed packets ... we don't need to do anything 
+        //digitalWrite(A4, LOW);
       }
-      // after *any* delimiter, we reset this,
-      inBufferWp = 0;
-    } // end delineated case, 
-  } // end while(avail) 
-
-  // load check, 
-  if(inBufferLen > 0 && stackEmptySlot(this, VT_STACK_ORIGIN)){
-    // load up... this adds a 2nd memcpy that'd be tite to delete 
-    uint16_t len = cobsDecode(&(inBuffer[inTail][3]), inBufferLen - 4, temp);
-    stackLoadSlot(this, VT_STACK_ORIGIN, temp, len);
-    // we need to issue an ack, 
-    ackAwaiting[0] = 4; // checksum, always this, msg (incl. delimiter) is 4 bytes 
-    ackAwaiting[1] = P2PLINK_KEY_ACK;
-    ackAwaiting[2] = inBuffer[inTail][2]; // ack ID is pck ID 
-    ackAwaiting[3] = 0; // delimiter
-    ackIsAwaiting = true;
-    // and we're now clear to read in, 
-    inBufferLen = 0;
+    }
+    // in both cases, clear it
+    rxBufferLen = 0;
   }
-
   // check & execute actual tx 
   checkOutputStates();
 }
@@ -88,57 +66,20 @@ void ArduLinkSerial::send(uint8_t* data, uint16_t len){
   // double guard?
   if(!cts()) return;
   // setup, 
-  // setup,
-  outPck[0] = len + 5; // len + 0 delimiter & cobs start + id + key + checksum
-  outPck[1] = P2PLINK_KEY_PCK;
-  outPck[2] = nextPckIdTx;
-  nextPckIdTx ++; if(nextPckIdTx == 0) nextPckIdTx = 1;
-  // encode in... stuffing after header & adding tail zero 
-  outPckLen = cobsEncode(data, len, &(outPck[3]));
-  // cobsEncode reports length of encode *without* the addnl delimiter, 
-  // so just len + 1, 1 being the 1st byte that COBs inserts. we add an addnl 3, id, key, checksum,
-  outPckLen += 4; 
-  outPck[outPckLen - 1] = 0;
-  // other output settings 
-  outNTA = 0;
-  outLTAT = 0;
-  // check output: expedite this if we can, 
-  // checkOutputStates();
+  txBuffer[0] = len + 2;                  // pck[0] is checksum, len + delimiter + cobs start, 
+  cobsEncode(data, len, &(txBuffer[1]));  // encode 
+  txBuffer[len + 1] = 0;                  // stuff delimiter, 
+  txBufferLen = len + 2;                  // how many bytes to write, 
+  txBufferRp = 0;                         // reset to start writing at zero, 
+  checkOutputStates();                    // start write 
 }
 
 // we are CTS if outPck is not occupied, 
 boolean ArduLinkSerial::cts(void){
-  return (outPckLen == 0);
+  return (txBufferLen == 0);
 }
 
 void ArduLinkSerial::checkOutputStates(void){
-  // can we setup a new tx buffer? only if no action on existing transmit, 
-  if(txBufferLen == 0 && txBufferRp == 0){
-    // acks prioritized, 
-    if(ackIsAwaiting){
-      // simple, we copy in and tx, 
-      memcpy(txBuffer, ackAwaiting, 4);
-      ackIsAwaiting = false;
-      txBufferLen = 4;
-    } else if (outPckLen > 0){
-      // we are still awaiting completion of this pck's tx... 
-      unsigned long now = micros();
-      // transmit states,
-      if(outNTA == 0 || (outLTAT + P2PLINK_RETRY_TIME < now && outNTA < P2PLINK_RETRY_MACOUNT)){
-        // first transmit, or time's up & haven't retried too many times, 
-        memcpy(txBuffer, outPck, outPckLen);
-        txBufferLen = outPckLen;
-        outNTA ++;
-        outLTAT = now;
-      } else if (outLTAT + P2PLINK_RETRY_TIME > now){
-        // waiting to retransmit, 
-      } else {
-        // time's up & we're over retransmit count, this deletes, 
-        outPckLen = 0;
-      }
-    }
-  } // end new txbuffer, 
-
   // finally, we write out so long as we can: 
   // we aren't guaranteed to get whole pckts out in each fn call 
   while(ser->availableForWrite() && txBufferLen != 0){
