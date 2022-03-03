@@ -31,55 +31,99 @@ void ArduLinkSerial::begin(uint32_t baudRate){
 
 void ArduLinkSerial::loop(void){
   // byte injestion: think of this like the rx interrupt stage, 
-  while(ser->available() && rxBufferLen == 0){
+  while(ser->available()){
     // read byte into the current stub, 
     rxBuffer[rxBufferWp ++] = ser->read();
     if(rxBuffer[rxBufferWp - 1] == 0){
-      rxBufferLen = rxBufferWp;
+      // 1st, we checksum:
+      if(rxBuffer[0] != rxBufferWp){ 
+        ERROR(3, "serLink bad checksum, cs: " + String(rxBuffer[0]) + " wp: " + String(rxBufferWp));
+      } else {
+        // acks, packs, or broken things 
+        if(rxBuffer[1] == P2PLINK_KEY_PCK){
+          // dirty guard for retransmitted packets, 
+          if(rxBuffer[2] != lastIdRxd){
+            inAwaitingId = rxBuffer[2]; // stash ID 
+            inAwaitingLen = cobsDecode(&(rxBuffer[3]), rxBufferWp - 2, inAwaiting); // fill inAwaiting 
+          } else {
+            ERROR(3, "serLink double rx");
+          }
+        } else if (rxBuffer[1] == P2PLINK_KEY_ACK){
+          if(rxBuffer[2] == outAwaitingId){
+            // clear now, 
+            outAwaitingLen = 0;
+          }
+        } else {
+          // a bonkers, broken to shit packet 
+        }
+      }
       // always reset on delimiter, 
       rxBufferWp = 0;
     }
   } // end while-receive 
 
-  // check for new pcks, 
-  if(rxBufferLen){
-    if(rxBuffer[0] != rxBufferLen){
-      ERROR(3, "p2p bad checksum, wp = " + String(rxBufferLen) + " cs = " + String(rxBuffer[0]));
-    } else {
-      // can we write it ?
-      if(stackEmptySlot(this, VT_STACK_ORIGIN)){
-        //digitalWrite(A4, !digitalRead(A4));
-        uint16_t len = cobsDecode(&(rxBuffer[1]), rxBufferLen - 1, temp);
-        stackLoadSlot(this, VT_STACK_ORIGIN, temp, len);
-      } else {
-        //digitalWrite(A4, LOW);
-      }
-    }
-    // in both cases, clear it
-    rxBufferLen = 0;
+  // check insertion & genny the ack if we can 
+  if(inAwaitingLen && stackEmptySlot(this, VT_STACK_ORIGIN) && !ackIsAwaiting){
+    stackLoadSlot(this, VT_STACK_ORIGIN, inAwaiting, inAwaitingLen);
+    ackIsAwaiting = true;
+    ackAwaiting[0] = 4;                 // checksum still, innit 
+    ackAwaiting[1] = P2PLINK_KEY_ACK;   // it's an ack bruv 
+    ackAwaiting[2] = inAwaitingId;      // which pck r we akkin m8 
+    ackAwaiting[3] = 0;                 // delimiter 
+    inAwaitingLen = 0;
   }
+
   // check & execute actual tx 
   checkOutputStates();
 }
 
 void ArduLinkSerial::send(uint8_t* data, uint16_t len){
+  digitalWrite(A4, !digitalRead(A4));
   // double guard?
   if(!cts()) return;
   // setup, 
-  txBuffer[0] = len + 2;                  // pck[0] is checksum, len + delimiter + cobs start, 
-  cobsEncode(data, len, &(txBuffer[1]));  // encode 
-  txBuffer[len + 1] = 0;                  // stuff delimiter, 
-  txBufferLen = len + 2;                  // how many bytes to write, 
-  txBufferRp = 0;                         // reset to start writing at zero, 
-  checkOutputStates();                    // start write 
+  outAwaiting[0] = len + 4;               // pck[0] is checksum = len + cobs start + cobs delimit + ack/pack + id 
+  outAwaiting[1] = P2PLINK_KEY_PCK;       // this ones a packet m8 
+  outAwaitingId ++; if(outAwaitingId == 0) outAwaitingId = 1;
+  outAwaiting[2] = outAwaitingId;         // an id     
+  cobsEncode(data, len, &(outAwaiting[3]));  // encode 
+  outAwaiting[len + 3] = 0;               // stuff delimiter, 
+  outAwaitingLen = outAwaiting[0];        // track... 
+  // transmit attempts etc 
+  outAwaitingNTA = 0;
+  outAwaitingLTAT = 0;
+  // try it 
+  checkOutputStates();                    // try / start write 
 }
 
 // we are CTS if outPck is not occupied, 
 boolean ArduLinkSerial::cts(void){
-  return (txBufferLen == 0);
+  return (outAwaitingLen == 0);
 }
 
 void ArduLinkSerial::checkOutputStates(void){
+  // can we ack? no real acks for now, 
+  if(ackIsAwaiting && txBufferLen == 0){
+    memcpy(txBuffer, ackAwaiting, 4);
+    txBufferLen = 4;
+    txBufferRp = 0;
+    ackIsAwaiting = false;
+  }
+  // would we be clear to tx ? 
+  if(outAwaitingLen > 0 && txBufferLen == 0){
+    // check retransmit cases, 
+    if(outAwaitingLTAT == 0 || outAwaitingLTAT + P2PLINK_RETRY_TIME < micros()){
+      memcpy(txBuffer, outAwaiting, outAwaitingLen);
+      outAwaitingLTAT = micros();
+      txBufferLen = outAwaitingLen;
+      txBufferRp = 0;
+      outAwaitingNTA ++;
+    } 
+    // check if last attempt, 
+    if(outAwaitingNTA >= P2PLINK_RETRY_MACOUNT){
+      outAwaitingLen = 0;
+    }
+  }
   // finally, we write out so long as we can: 
   // we aren't guaranteed to get whole pckts out in each fn call 
   while(ser->availableForWrite() && txBufferLen != 0){

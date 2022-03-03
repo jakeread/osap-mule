@@ -27,7 +27,7 @@ is; no warranty is provided, and users accept all liability.
 #define P2PLINK_KEY_ACK 171  // 0b10101011
 // retry settings 
 #define P2PLINK_RETRY_MACOUNT 2
-#define P2PLINK_RETRY_TIME 2000  // 255 * 10-bit uart byte * 3mhz = 850us 
+#define P2PLINK_RETRY_TIME 10000  // microseconds 
 
 #define P2PLINK_LIGHT_ON_TIME 100 // in ms 
 
@@ -46,16 +46,28 @@ class ArduLinkSerial : public VPort {
     // -------------------------------- Data 
     // UART hardware:
     Uart* ser;
+    // incoming, always kept clear to receive: 
+    uint8_t rxBuffer[P2PLINK_BUFSIZE];
+    uint8_t rxBufferWp = 0;
+    // guard on double transmits 
+    uint8_t lastIdRxd = 0;
+    // incoming stash
+    uint8_t inAwaiting[P2PLINK_BUFSIZE];
+    uint8_t inAwaitingId = 0;
+    uint8_t inAwaitingLen = 0;
+    // outgoing ack, 
+    uint8_t ackAwaiting[4];
+    boolean ackIsAwaiting = false;
+    // outgoing await,
+    uint8_t outAwaiting[P2PLINK_BUFSIZE];
+    uint8_t outAwaitingId = 1;
+    uint8_t outAwaitingLen = 0;
+    uint8_t outAwaitingNTA = 0;
+    unsigned long outAwaitingLTAT = 0;
     // outgoing buffer,
     uint8_t txBuffer[P2PLINK_BUFSIZE];
     uint8_t txBufferLen = 0;
     uint8_t txBufferRp = 0;
-    // incoming, 
-    uint8_t rxBuffer[P2PLINK_BUFSIZE];
-    uint8_t rxBufferLen = 0;
-    uint8_t rxBufferWp = 0;
-    // stash 
-    uint8_t temp[P2PLINK_BUFSIZE];
     // -------------------------------- Constructors 
     ArduLinkSerial(Vertex* _parent, String _name, Uart* _ser);
 };
