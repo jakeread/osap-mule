@@ -83,26 +83,25 @@ void loop() {
   // osap's gotta operate, 
   //ERRLIGHT_ON;
   osapMainLoop(&root);
-  delay(10);
   // should look like osap.loop(); for the sake of arduino-ness 
   //ERRLIGHT_OFF;
   // error light errand... 
   sysErrLightCheck();
   //digitalWrite(A4, HIGH);
   // high speed
-  // if(!digitalRead(BUTTON_PIN)){
-  //   ep_button.write(btn_down, 2);
-  // } else {
-  //   ep_button.write(btn_up, 2);
-  // }
+  if(!digitalRead(BUTTON_PIN)){
+    ep_button.write(btn_down, 2);
+  } else {
+    ep_button.write(btn_up, 2);
+  }
   // clock light errand... 
   if(millis() > lastTick + tickTime){
     // button pusher,
-    if(!digitalRead(BUTTON_PIN)){
-      ep_button.write(btn_down, 2);
-    } else {
-      ep_button.write(btn_up, 2);
-    }
+    // if(!digitalRead(BUTTON_PIN)){
+    //   ep_button.write(btn_down, 2);
+    // } else {
+    //   ep_button.write(btn_up, 2);
+    // }
     // clk 
     digitalWrite(13, !digitalRead(13));
     lastTick = millis();
