@@ -48,7 +48,7 @@ void ArduLinkSerial::loop(void){
     } else {
       // can we write it ?
       if(stackEmptySlot(this, VT_STACK_ORIGIN)){
-        digitalWrite(A4, !digitalRead(A4));
+        //digitalWrite(A4, !digitalRead(A4));
         uint16_t len = cobsDecode(&(rxBuffer[1]), rxBufferLen - 1, temp);
         stackLoadSlot(this, VT_STACK_ORIGIN, temp, len);
       } else {

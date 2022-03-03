@@ -19,6 +19,7 @@ no warranty is provided, and users accept all liability.
 #define VT_SLOTSIZE 256
 #define VT_STACKSIZE 3  // must be >= 2 for ringbuffer operation 
 #define VT_MAXCHILDREN 16
+#define VT_MAXITEMSPERTURN 8
 
 // max # of endpoints that could be spawned here,
 #define MAX_CONTEXT_ENDPOINTS 64

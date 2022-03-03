@@ -37,10 +37,10 @@ ArduLinkSerial ser1Link(&root, "arduinoSer1", &Serial1);
 
 uint8_t btn_down[1] = {1};
 uint8_t btn_up[1] = {0};
-#define BTN_ROUTE_LEN 7
-// 3 
+
+// #define BTN_ROUTE_LEN 3
 // uint8_t btn_route[BTN_ROUTE_LEN] = { PK_SIB_KEY, 3, 0 };
-// 7
+#define BTN_ROUTE_LEN 7
 uint8_t btn_route[BTN_ROUTE_LEN] = { PK_SIB_KEY, 1, 0, PK_PFWD_KEY, PK_SIB_KEY, 3, 0 };
 
 Endpoint ep_button(&root, "button");
@@ -83,6 +83,7 @@ void loop() {
   // osap's gotta operate, 
   //ERRLIGHT_ON;
   osapMainLoop(&root);
+  delay(10);
   // should look like osap.loop(); for the sake of arduino-ness 
   //ERRLIGHT_OFF;
   // error light errand... 
