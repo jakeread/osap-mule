@@ -56,25 +56,19 @@ void sysErrLightCheck(void){
 // config-your-own-ll-escape-hatch
 void debugPrint(String msg){
   // whatever you want,
-  //ERRLIGHT_ON;
   uint32_t len = msg.length();
-  errBuf[0] = 0; // serport looks for acks in each msg, this is not one
-  errBuf[1] = PK_PTR; 
-  errBuf[2] = PK_LLESCAPE_KEY; // the ll-errmsg-key
-  errBuf[3] = len & 255;
-  errBuf[4] = (len >> 8) & 255;
-  errBuf[5] = (len >> 16) & 255;
-  errBuf[6] = (len >> 24) & 255;
-  msg.getBytes(&(errBuf[7]), len + 1);
-  size_t ecl = cobsEncode(errBuf, len + 7, errEncoded);
-  errEncoded[ecl] = 0;
+  errBuf[0] = len + 8;  // len, key, cobs start + end, strlen (4) 
+  errBuf[1] = 172;      // serialLink debug key 
+  errBuf[2] = len & 255;
+  errBuf[3] = (len >> 8) & 255;
+  errBuf[4] = (len >> 16) & 255;
+  errBuf[5] = (len >> 24) & 255;
+  msg.getBytes(&(errBuf[6]), len + 1);
+  size_t ecl = cobsEncode(&(errBuf[2]), len + 4, errEncoded);
+  memcpy(&(errBuf[2]), errEncoded, ecl);
+  errBuf[errBuf[0] - 1] = 0;
   // direct escape 
-  //if(Serial.availableForWrite() > (int64_t)ecl){
-    Serial.write(errEncoded, ecl + 1);
-    //Serial.flush();
-  //} else {
-  //  ERRLIGHT_ON;
-  //}
+  Serial.write(errBuf, errBuf[0]);
 }
 
 //#endif 

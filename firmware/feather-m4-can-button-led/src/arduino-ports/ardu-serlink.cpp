@@ -16,13 +16,32 @@ is; no warranty is provided, and users accept all liability.
 #include "./osape/utils/cobs.h"
 #include "./osap_debug.h"
 
-ArduLinkSerial::ArduLinkSerial( Vertex* _parent, String _name, Uart* _ser
+ArduLinkSerial::ArduLinkSerial( Vertex* _parent, String _name, Uart* _uart
 ) : VPort ( _parent, _name ){
-  ser = _ser;
+  stream = _uart; // should convert Uart* to Stream*, as Uart inherits stream 
+  uart = _uart; 
+}
+
+ArduLinkSerial::ArduLinkSerial( Vertex* _parent, String _name, Serial_* _usbcdc
+) : VPort ( _parent, _name ){
+  stream = _usbcdc;
+  usbcdc = _usbcdc;
 }
 
 void ArduLinkSerial::begin(uint32_t baudRate){
-  ser->begin(baudRate);
+  if(uart != nullptr){
+    uart->begin(baudRate);
+  } else if (usbcdc != nullptr){
+    usbcdc->begin(baudRate); 
+  }
+}
+
+void ArduLinkSerial::begin(void){
+  if(uart != nullptr){
+    uart->begin(1000000);
+  } else if (usbcdc != nullptr){
+    usbcdc->begin(9600);  // baud ignored on cdc begin  
+  }
 }
 
 // link packets are max 256 bytes in length, including the 0 delimiter 
@@ -31,16 +50,16 @@ void ArduLinkSerial::begin(uint32_t baudRate){
 
 void ArduLinkSerial::loop(void){
   // byte injestion: think of this like the rx interrupt stage, 
-  while(ser->available()){
+  while(stream->available()){
     // read byte into the current stub, 
-    rxBuffer[rxBufferWp ++] = ser->read();
+    rxBuffer[rxBufferWp ++] = stream->read();
     if(rxBuffer[rxBufferWp - 1] == 0){
       // 1st, we checksum:
       if(rxBuffer[0] != rxBufferWp){ 
-        ERROR(3, "serLink bad checksum, cs: " + String(rxBuffer[0]) + " wp: " + String(rxBufferWp));
+        ERROR(3, "serLink bad checksum, cs: " + String(rxBuffer[0]) + " wp: " + String(rxBufferWp + 1));
       } else {
         // acks, packs, or broken things 
-        if(rxBuffer[1] == P2PLINK_KEY_PCK){
+        if(rxBuffer[1] == SERLINK_KEY_PCK){
           // dirty guard for retransmitted packets, 
           if(rxBuffer[2] != lastIdRxd){
             inAwaitingId = rxBuffer[2]; // stash ID 
@@ -48,7 +67,7 @@ void ArduLinkSerial::loop(void){
           } else {
             ERROR(3, "serLink double rx");
           }
-        } else if (rxBuffer[1] == P2PLINK_KEY_ACK){
+        } else if (rxBuffer[1] == SERLINK_KEY_ACK){
           if(rxBuffer[2] == outAwaitingId){
             // clear now, 
             outAwaitingLen = 0;
@@ -67,7 +86,7 @@ void ArduLinkSerial::loop(void){
     stackLoadSlot(this, VT_STACK_ORIGIN, inAwaiting, inAwaitingLen);
     ackIsAwaiting = true;
     ackAwaiting[0] = 4;                 // checksum still, innit 
-    ackAwaiting[1] = P2PLINK_KEY_ACK;   // it's an ack bruv 
+    ackAwaiting[1] = SERLINK_KEY_ACK;   // it's an ack bruv 
     ackAwaiting[2] = inAwaitingId;      // which pck r we akkin m8 
     ackAwaiting[3] = 0;                 // delimiter 
     inAwaitingLen = 0;
@@ -78,12 +97,12 @@ void ArduLinkSerial::loop(void){
 }
 
 void ArduLinkSerial::send(uint8_t* data, uint16_t len){
-  digitalWrite(A4, !digitalRead(A4));
+  //digitalWrite(A4, !digitalRead(A4));
   // double guard?
   if(!cts()) return;
   // setup, 
-  outAwaiting[0] = len + 4;               // pck[0] is checksum = len + cobs start + cobs delimit + ack/pack + id 
-  outAwaiting[1] = P2PLINK_KEY_PCK;       // this ones a packet m8 
+  outAwaiting[0] = len + 4;               // pck[0] is checksum = len + checksum + cobs start + cobs delimit + ack/pack + id 
+  outAwaiting[1] = SERLINK_KEY_PCK;       // this ones a packet m8 
   outAwaitingId ++; if(outAwaitingId == 0) outAwaitingId = 1;
   outAwaiting[2] = outAwaitingId;         // an id     
   cobsEncode(data, len, &(outAwaiting[3]));  // encode 
@@ -112,7 +131,7 @@ void ArduLinkSerial::checkOutputStates(void){
   // would we be clear to tx ? 
   if(outAwaitingLen > 0 && txBufferLen == 0){
     // check retransmit cases, 
-    if(outAwaitingLTAT == 0 || outAwaitingLTAT + P2PLINK_RETRY_TIME < micros()){
+    if(outAwaitingLTAT == 0 || outAwaitingLTAT + SERLINK_RETRY_TIME < micros()){
       memcpy(txBuffer, outAwaiting, outAwaitingLen);
       outAwaitingLTAT = micros();
       txBufferLen = outAwaitingLen;
@@ -120,15 +139,15 @@ void ArduLinkSerial::checkOutputStates(void){
       outAwaitingNTA ++;
     } 
     // check if last attempt, 
-    if(outAwaitingNTA >= P2PLINK_RETRY_MACOUNT){
+    if(outAwaitingNTA >= SERLINK_RETRY_MACOUNT){
       outAwaitingLen = 0;
     }
   }
   // finally, we write out so long as we can: 
   // we aren't guaranteed to get whole pckts out in each fn call 
-  while(ser->availableForWrite() && txBufferLen != 0){
+  while(stream->availableForWrite() && txBufferLen != 0){
     // output next byte, 
-    ser->write(txBuffer[txBufferRp ++]);
+    stream->write(txBuffer[txBufferRp ++]);
     // check for end of buffer; reset transmit states if so 
     if(txBufferRp >= txBufferLen) {
       txBufferLen = 0; 

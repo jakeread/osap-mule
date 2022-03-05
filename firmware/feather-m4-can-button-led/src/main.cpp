@@ -18,8 +18,11 @@
 
 Vertex root("osap-mule");
 
-// ------------------------------------ (to be improved) USB Serial 
+// ------------------------------------ USB Serial 
 
+ArduLinkSerial ser0Link(&root, "arduinoUSBSerial", &Serial);
+
+/*
 VPort vp_usbSerial(
   &root, "usbSerial", 
   &vp_usbSerial_loop, 
@@ -27,11 +30,12 @@ VPort vp_usbSerial(
   &vp_usbSerial_cts,
   &vp_usbSerial_onOriginStackClear 
 );
+*/
 
 // ------------------------------------ UART "Port"
 
 // we want a link object, 
-ArduLinkSerial ser1Link(&root, "arduinoSer1", &Serial1);
+//ArduLinkSerial ser1Link(&root, "arduinoSer1", &Serial1);
 
 // ------------------------------------ Button Endpoint
 
@@ -70,14 +74,15 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT);
   // this vv is a little confusing for the people, innit? 
-  vp_usbSerial_setup(&vp_usbSerial);
-  ser1Link.begin(1000000);
+  ser0Link.begin();
+  //vp_usbSerial_setup(&vp_usbSerial);
+  //ser1Link.begin(1000000);
   // setup a route... 
   ep_button.addRoute(btn_route, BTN_ROUTE_LEN, EP_ROUTE_ACKED);
 }
 
 uint32_t lastTick = 0;
-uint32_t tickTime = 50;
+uint32_t tickTime = 500;
 
 void loop() {
   // osap's gotta operate, 
@@ -89,13 +94,14 @@ void loop() {
   sysErrLightCheck();
   //digitalWrite(A4, HIGH);
   // high speed
-  if(!digitalRead(BUTTON_PIN)){
-    ep_button.write(btn_down, 2);
-  } else {
-    ep_button.write(btn_up, 2);
-  }
+  // if(!digitalRead(BUTTON_PIN)){
+  //   ep_button.write(btn_down, 2);
+  // } else {
+  //   ep_button.write(btn_up, 2);
+  // }
   // clock light errand... 
   if(millis() > lastTick + tickTime){
+    DEBUG("test");
     // button pusher,
     // if(!digitalRead(BUTTON_PIN)){
     //   ep_button.write(btn_down, 2);

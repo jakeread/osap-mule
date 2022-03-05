@@ -18,14 +18,9 @@ import { TS, PK, TIMES } from '../osapjs/core/ts.js'
 
 import WSSPipe from './utes/wssPipe.js'
 
-import SerialPort from 'serialport'
-import Delimiter from '@serialport/parser-delimiter'
-import ByteLength from '@serialport/parser-byte-length'
+import { SerialPort, DelimiterParser } from 'serialport'
 
 import COBS from './utes/cobs.js'
-
-// temporary...
-import { reverseRoute } from '../osapjs/core/osapLoop.js'
 
 // we include an osap object - a node
 let osap = new OSAP()
@@ -98,10 +93,23 @@ WSSPipe.start().then((ws) => {
 
 // -------------------------------------------------------- USB Serial VPort
 
-serVPort.maxSegLength = 512 // lettuce do this for embedded expectations
+// have some "protocol" at the link layer 
+// buffer is max 256 long for that sweet sweet uint8_t alignment 
+let SERLINK_BUFSIZE = 255
+// -1 checksum, -1 packet id, -1 packet type, -2 cobs
+let SERLINK_SEGSIZE = SERLINK_BUFSIZE - 5
+// packet keys; 
+let SERLINK_KEY_PCK = 170  // 0b10101010
+let SERLINK_KEY_ACK = 171  // 0b10101011
+let SERLINK_KEY_DBG = 172   
+// retry settings 
+let SERLINK_RETRY_MACOUNT = 2
+let SERLINK_RETRY_TIME = 100  // milliseconds  
+
+serVPort.maxSegLength = 255 // lettuce do this for embedded expectations
 let LOGSER = true
-let LOGSERTX = false
-let LOGSERRX = false 
+let LOGSERTX = false 
+let LOGSERRX = false  
 let findSerialPort = (pid) => {
   if (LOGSER) console.log(`SERPORT hunt for productId: ${pid}`)
   return new Promise((resolve, reject) => {
@@ -130,67 +138,104 @@ let startSerialPort = (pid, options) => {
   let status = "opening"
   let flowCondition = () => { return false }
   serVPort.cts = () => { 
-    if(status = "open" && flowCondition()){
+    if(status == "open" && flowCondition()){
       return true
     } else {
       return false 
     }
   }
   // open up,
-  findSerialPort(pid).then((com) => {
-    if (true) console.log(`SERPORT contact at ${com}, opening`)
-    let port = new SerialPort(com, options)
+  findSerialPort(pid).then((portName) => {
+    // hello open 
+    if (true) console.log(`SERPORT contact at ${portName}, opening`)
+    // the port, 
+    let port = new SerialPort({
+      path: portName, 
+      baudRate: 9600 
+    })
     let pcount = opencount
     opencount++
+    // buffer... 
+    let outAwaiting = null
+    let outAwaitingId = 1
+    let outAwaitingTimer = null 
+    let numRetries = 0 
+    let lastIdRxd = 0 
     port.on('open', () => {
       // we track remote open spaces, this is stateful per link... 
-      let rcrxb = 4 // see vt_usbSerial.h for how many remote spaces we can push to, and use that # - 1,  
-      console.log(`SERPORT at ${com} #${pcount} OPEN`)
+      console.log(`SERPORT at ${portName} #${pcount} OPEN`)
       // is now open,
       status = "open"
+      // fc is now this, 
+      flowCondition = () => { return (outAwaiting == null) }
       // to get, use delimiter
-      let parser = port.pipe(new Delimiter({ delimiter: [0] }))
+      let parser = port.pipe(new DelimiterParser({ delimiter: [0] }))
       //let parser = port.pipe(new ByteLength({ length: 1 }))
-      flowCondition = () => {
-        return (rcrxb > 0)
-      }
       // implement rx
       parser.on('data', (buf) => {
-        let decoded = COBS.decode(buf)
-        //if(decoded[0] == 77) console.log('rx 77', decoded[1])
-        if (LOGSERRX) {
-          console.log('SERPORT Rx')
-          PK.logPacket(decoded)
+        if(LOGSERRX) console.log('SERPORT Rx', buf) 
+        // checksum... 
+        if(buf.length + 1 != buf[0]){
+          console.log(`SERPORT Rx Bad Checksum, ${buf[0]} reported, ${buf.length} received`)
+          return
         }
-        // 1st byte is count of how many acks this loop, 
-        rcrxb += decoded[0] 
-        //console.log('rcrxb', rcrxb)
-        // hotswitch low level escapes 
-        if(decoded[2] == PK.LLESCAPE.KEY){
-          let str = TS.read('string', decoded, 2, true).value
-          console.log('LL:', str)
-        } else {
-          if(decoded.length > 1) serVPort.receive(decoded.slice(1))
+        // ack / pack: check and clear, or noop 
+        if(buf[1] == SERLINK_KEY_ACK){
+          if(buf[2] == outAwaitingId){
+            outAwaiting = null 
+          } 
+        } else if(buf[1] == SERLINK_KEY_PCK){
+          if(buf[2] == lastIdRxd){
+            console.log(`SERPORT Rx double id`)
+            return 
+          } else {
+            lastIdRxd = buf[2] 
+            let decoded = COBS.decode(buf.slice(3))
+            //console.log('SERPORT RX Decoded', decoded)
+            serVPort.receive(decoded)
+            // output an ack, 
+            let ack = new Uint8Array(4)
+            ack[0] = 4
+            ack[1] = SERLINK_KEY_ACK
+            ack[2] = lastIdRxd 
+            ack[3] = 0 
+            port.write(ack)
+          }
+        } else if (buf[1] == SERLINK_KEY_DBG){
+          let decoded = COBS.decode(buf.slice(2))
+          let str = TS.read('string', decoded, 0, true).value; console.log("LL: ", str);
         }
       })
       // implement tx
       serVPort.send = (buffer) => {
-        rcrxb -= 1 
-        //console.log('rcrxb', rcrxb)
-        port.write(COBS.encode(buffer))
-        if (LOGSERTX) {
-          console.log('SERPORT Tx')
-          PK.logPacket(buffer)
-        }
-      }
-      // phy handle to close,
-      serVPort.requestClose = () => {
-        console.log(`CLOSING #${pcount}`)
-        status = "closing"
-        port.close(() => { // await close callback, add 1s buffer
-          console.log(`SERPORT #${pcount} closed`)
-          status = "closed"
-        })
+        // double guard, idk
+        if(!flowCondition()) return;
+        // buffers, uint8arrays, all the same afaik 
+        // we are len + cobs start + cobs delimit + pck/ack + id + checksum ? 
+        outAwaiting = new Uint8Array(buffer.length + 5)
+        outAwaiting[0] = buffer.length + 5 
+        outAwaiting[1] = SERLINK_KEY_PCK
+        outAwaitingId ++; if(outAwaitingId > 255) outAwaitingId = 1;
+        outAwaiting[2] = outAwaitingId
+        outAwaiting.set(COBS.encode(buffer), 3)
+        // reset retry states 
+        clearTimeout(outAwaitingTimer)
+        numRetries = 0 
+        // ship eeeet 
+        if(LOGSERTX) console.log('SERPORT Tx', outAwaiting)
+        port.write(outAwaiting)
+        // retry timeout, in reality USB is robust enough, but codes sometimes bungle messages too 
+        outAwaitingTimer = setTimeout(() => {
+          if(outAwaiting && numRetries < SERLINK_RETRY_MACOUNT){
+            port.write(outAwaiting)
+            numRetries ++ 
+          } else if (!outAwaiting){
+            // noop
+          } else {
+            // cancel 
+            outAwaiting = null 
+          }
+        }, SERLINK_RETRY_TIME)
       }
     }) // end on-open
     port.on('error', (err) => {
@@ -202,7 +247,7 @@ let startSerialPort = (pid, options) => {
       })
     })
     port.on('close', (evt) => {
-      console.log('FERME LA')
+      console.log('SERPORT closing')
       status = "closing"
       console.log(`SERPORT #${pcount} closed`)
     })
