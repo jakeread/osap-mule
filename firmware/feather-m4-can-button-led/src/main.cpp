@@ -39,6 +39,7 @@ Endpoint ep_button(&root, "button");
 unsigned long lastDataPull = 0;
 
 EP_ONDATA_RESPONSES onLEDData(uint8_t* data, uint16_t len){
+  DEBUG("rx: " + String(len) + " " + data[0] + " " + data[1]);
   //digitalWrite(A4, !digitalRead(A4));
   if(data[0]){
     digitalWrite(LED_PIN, HIGH);
@@ -68,7 +69,7 @@ void setup() {
 }
 
 uint32_t lastTick = 0;
-uint32_t tickTime = 50;
+uint32_t tickTime = 500;
 
 void loop() {
   // osap's gotta operate, 
