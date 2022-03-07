@@ -191,15 +191,17 @@ let startSerialPort = (pid, options) => {
           } else {
             lastIdRxd = buf[2] 
             let decoded = COBS.decode(buf.slice(3))
-            //console.log('SERPORT RX Decoded', decoded)
-            serVPort.receive(decoded)
-            // output an ack, 
-            let ack = new Uint8Array(4)
-            ack[0] = 4
-            ack[1] = SERLINK_KEY_ACK
-            ack[2] = lastIdRxd 
-            ack[3] = 0 
-            port.write(ack)
+            serVPort.awaitStackAvailableSpace(0, 2000).then(() => {
+              //console.log('SERPORT RX Decoded', decoded)
+              serVPort.receive(decoded)
+              // output an ack, 
+              let ack = new Uint8Array(4)
+              ack[0] = 4
+              ack[1] = SERLINK_KEY_ACK
+              ack[2] = lastIdRxd 
+              ack[3] = 0 
+              port.write(ack)
+            })
           }
         } else if (buf[1] == SERLINK_KEY_DBG){
           let decoded = COBS.decode(buf.slice(2))
