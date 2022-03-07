@@ -16,30 +16,32 @@
 
 // ------------------------------------ Root Vertex 
 
-Vertex root("osap-mule");
+OSAP osap("osap-mule");
+
+//Vertex root("osap-mule");
 
 // ------------------------------------ USB Serial 
 
-ArduLinkSerial ser0Link(&root, "arduinoUSBSerial", &Serial);
+ArduLinkSerial ser0Link(&osap, "arduinoUSBSerial", &Serial);
 
 // ------------------------------------ UART "Port"
 
 // we want a link object, 
-ArduLinkSerial ser1Link(&root, "arduinoSer1", &Serial1);
+ArduLinkSerial ser1Link(&osap, "arduinoSer1", &Serial1);
 
 // ------------------------------------ Button Endpoint
 
 uint8_t btn_down[1] = {1};
 uint8_t btn_up[1] = {0};
 
-Endpoint ep_button(&root, "button");
+Endpoint ep_button(&osap, "button");
 
 // ------------------------------------ LED Endpoint 
 
 unsigned long lastDataPull = 0;
 
 EP_ONDATA_RESPONSES onLEDData(uint8_t* data, uint16_t len){
-  DEBUG("rx: " + String(len) + " " + data[0] + " " + data[1]);
+  //DEBUG("rx: " + String(len) + " " + data[0] + " " + data[1]);
   //digitalWrite(A4, !digitalRead(A4));
   if(data[0]){
     digitalWrite(LED_PIN, HIGH);
@@ -49,7 +51,7 @@ EP_ONDATA_RESPONSES onLEDData(uint8_t* data, uint16_t len){
   return EP_ONDATA_ACCEPT;
 }
 
-Endpoint ep_led(&root, "led", onLEDData);
+Endpoint ep_led(&osap, "led", onLEDData);
 
 // ------------------------------------ Arduino Stuff 
 
@@ -73,10 +75,7 @@ uint32_t tickTime = 500;
 
 void loop() {
   // osap's gotta operate, 
-  //ERRLIGHT_ON;
-  osapMainLoop(&root);
-  // should look like osap.loop(); for the sake of arduino-ness 
-  //ERRLIGHT_OFF;
+  osap.loop();
   // error light errand... 
   sysErrLightCheck();
   //digitalWrite(A4, HIGH);
