@@ -3,12 +3,8 @@
 #include "osape/core/osap.h"
 #include "osape/core/vertex.h"
 #include "osape/vertices/endpoint.h"
-#include "arduino-ports/ardu-serlink.h"
+#include "arduino-ports/vp_arduinoSerial.h"
 #include "osap_debug.h"
-
-// this vv should become another "link" w/ the Serial object passed in, 
-// or whatever structure you use for them uart ports 
-#include "arduino-ports/vp_usbSerial.h"
 
 // application kit 
 #define BUTTON_PIN 9 
@@ -20,14 +16,13 @@ OSAP osap("osap-mule");
 
 //Vertex root("osap-mule");
 
-// ------------------------------------ USB Serial 
+// ------------------------------------ USB Serial VPort 
 
-ArduLinkSerial ser0Link(&osap, "arduinoUSBSerial", &Serial);
+VPort_ArduinoSerial vpUSBSer(&osap, "arduinoUSBSerial", &Serial);
 
-// ------------------------------------ UART "Port"
+// ------------------------------------ UART VPort 
 
-// we want a link object, 
-ArduLinkSerial ser1Link(&osap, "arduinoSer1", &Serial1);
+VPort_ArduinoSerial vpSer1(&osap, "arduinoSer1", &Serial1);
 
 // ------------------------------------ Button Endpoint
 
@@ -62,8 +57,8 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT);
   // links need beginnings 
-  ser0Link.begin();
-  ser1Link.begin(1000000);
+  vpUSBSer.begin();
+  vpSer1.begin(1000000);
   // setup a route... 
   ep_button.addRoute((new EndpointRoute(EP_ROUTE_ACKED))->pfwd(1)->sib(3)); 
   //RouteBuilder* rt = (new RouteBuilder())->sib(3)->pfwd(1);

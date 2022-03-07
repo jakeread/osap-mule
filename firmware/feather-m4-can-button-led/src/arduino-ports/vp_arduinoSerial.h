@@ -1,5 +1,5 @@
 /*
-arduino-ports/ardu-serlink.h
+arduino-ports/vp_arduinoSerial.h
 
 turns arduino serial objects into competent link layers, for OSAP 
 
@@ -34,7 +34,7 @@ is; no warranty is provided, and users accept all liability.
 // note that we use uint8_t write ptrs / etc: and a size of 255, 
 // so we are never dealing w/ wraps etc, god bless 
 
-class ArduLinkSerial : public VPort {
+class VPort_ArduinoSerial : public VPort {
   public:
     // arduino std begin 
     void begin(uint32_t baud);
@@ -73,8 +73,8 @@ class ArduLinkSerial : public VPort {
     uint8_t txBufferLen = 0;
     uint8_t txBufferRp = 0;
     // -------------------------------- Constructors 
-    ArduLinkSerial(Vertex* _parent, String _name, Uart* _uart);
-    ArduLinkSerial(Vertex* _parent, String _name, Serial_* _usbcdc);
+    VPort_ArduinoSerial(Vertex* _parent, String _name, Uart* _uart);
+    VPort_ArduinoSerial(Vertex* _parent, String _name, Serial_* _usbcdc);
 };
 
 #endif 

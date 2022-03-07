@@ -12,23 +12,23 @@ projects. Copyright is retained and must be preserved. The work is provided as
 is; no warranty is provided, and users accept all liability.
 */
 
-#include "ardu-serlink.h"
+#include "vp_arduinoSerial.h"
 #include "./osape/utils/cobs.h"
 #include "./osap_debug.h"
 
-ArduLinkSerial::ArduLinkSerial( Vertex* _parent, String _name, Uart* _uart
+VPort_ArduinoSerial::VPort_ArduinoSerial( Vertex* _parent, String _name, Uart* _uart
 ) : VPort ( _parent, _name ){
   stream = _uart; // should convert Uart* to Stream*, as Uart inherits stream 
   uart = _uart; 
 }
 
-ArduLinkSerial::ArduLinkSerial( Vertex* _parent, String _name, Serial_* _usbcdc
+VPort_ArduinoSerial::VPort_ArduinoSerial( Vertex* _parent, String _name, Serial_* _usbcdc
 ) : VPort ( _parent, _name ){
   stream = _usbcdc;
   usbcdc = _usbcdc;
 }
 
-void ArduLinkSerial::begin(uint32_t baudRate){
+void VPort_ArduinoSerial::begin(uint32_t baudRate){
   if(uart != nullptr){
     uart->begin(baudRate);
   } else if (usbcdc != nullptr){
@@ -36,7 +36,7 @@ void ArduLinkSerial::begin(uint32_t baudRate){
   }
 }
 
-void ArduLinkSerial::begin(void){
+void VPort_ArduinoSerial::begin(void){
   if(uart != nullptr){
     uart->begin(1000000);
   } else if (usbcdc != nullptr){
@@ -48,7 +48,7 @@ void ArduLinkSerial::begin(void){
 // structured like:
 // checksum | pck/ack key | pck id | cobs encoded data | 0 
 
-void ArduLinkSerial::loop(void){
+void VPort_ArduinoSerial::loop(void){
   // byte injestion: think of this like the rx interrupt stage, 
   while(stream->available()){
     // read byte into the current stub, 
@@ -96,7 +96,7 @@ void ArduLinkSerial::loop(void){
   checkOutputStates();
 }
 
-void ArduLinkSerial::send(uint8_t* data, uint16_t len){
+void VPort_ArduinoSerial::send(uint8_t* data, uint16_t len){
   //digitalWrite(A4, !digitalRead(A4));
   // double guard?
   if(!cts()) return;
@@ -116,11 +116,11 @@ void ArduLinkSerial::send(uint8_t* data, uint16_t len){
 }
 
 // we are CTS if outPck is not occupied, 
-boolean ArduLinkSerial::cts(void){
+boolean VPort_ArduinoSerial::cts(void){
   return (outAwaitingLen == 0);
 }
 
-void ArduLinkSerial::checkOutputStates(void){
+void VPort_ArduinoSerial::checkOutputStates(void){
   // can we ack? no real acks for now, 
   if(ackIsAwaiting && txBufferLen == 0){
     memcpy(txBuffer, ackAwaiting, 4);
