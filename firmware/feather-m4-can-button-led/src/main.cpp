@@ -3,7 +3,7 @@
 #include "osape/core/osap.h"
 #include "osape/core/vertex.h"
 #include "osape/vertices/endpoint.h"
-#include "arduino-ports/vp_arduinoSerial.h"
+#include "osape_arduino/vp_arduinoSerial.h"
 #include "osap_debug.h"
 
 // application kit 
