@@ -259,8 +259,11 @@ let startSerialPort = (pid, options) => {
   })
 } // end start serial
 
-// D21 is 801E, D51 M4 is 8031, D51 CAN is 80CD 
-startSerialPort('80CD')
+// D21 Gemma is 801E, 
+// D21 QTPY is 80CB,
+// D51 M4 is 8031, 
+// D51 CAN is 80CD, 
+startSerialPort('80CB')
 
 /*
 serVPort.requestOpen = () => {

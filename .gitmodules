@@ -7,3 +7,9 @@
 [submodule "firmware/feather-m4-can-button-led/src/osape_arduino"]
 	path = firmware/feather-m4-can-button-led/src/osape_arduino
 	url = git@github.com:jakeread/osape_arduino.git
+[submodule "firmware/qtpy-d21-wire/src/osape"]
+	path = firmware/qtpy-d21-wire/src/osape
+	url = git@github.com:jakeread/osape.git
+[submodule "firmware/qtpy-d21-wire/src/osape_arduino"]
+	path = firmware/qtpy-d21-wire/src/osape_arduino
+	url = git@github.com:jakeread/osape_arduino.git
