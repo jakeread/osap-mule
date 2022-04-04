@@ -52,21 +52,20 @@ Endpoint ep_led(&osap, "led", onLEDData);
 
 void setup() {
   pinMode(13, OUTPUT);  // 'clklight'
-  pinMode(5, OUTPUT);   // 'errlight'
   pinMode(A4, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT);
   // links need beginnings 
   vpUSBSer.begin();
   vpSer1.begin(1000000);
-  // setup a route... 
-  ep_button.addRoute((new EndpointRoute(EP_ROUTE_ACKED))->pfwd(1)->sib(3)); 
+  //setup a route... 
+  //ep_button.addRoute((new EndpointRoute(EP_ROUTE_ACKED))->pfwd(1)->sib(3)); 
   //RouteBuilder* rt = (new RouteBuilder())->sib(3)->pfwd(1);
   // ep_button.addRoute(&epr_button);
 }
 
 uint32_t lastTick = 0;
-uint32_t tickTime = 500;
+uint32_t tickTime = 50;
 
 void loop() {
   // osap's gotta operate, 
@@ -74,23 +73,15 @@ void loop() {
   // error light errand... 
   sysErrLightCheck();
   //digitalWrite(A4, HIGH);
-  // high speed
-  // if(!digitalRead(BUTTON_PIN)){
-  //   ep_button.write(btn_down, 2);
-  // } else {
-  //   ep_button.write(btn_up, 2);
-  // }
   // clock light errand... 
   if(millis() > lastTick + tickTime){
-    //DEBUG("test");
+    digitalWrite(13, !digitalRead(13));
+    lastTick = millis();
     // button pusher,
     if(!digitalRead(BUTTON_PIN)){
       ep_button.write(btn_down, 2);
     } else {
       ep_button.write(btn_up, 2);
     }
-    // clk 
-    digitalWrite(13, !digitalRead(13));
-    lastTick = millis();
   }
 }
