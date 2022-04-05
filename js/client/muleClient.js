@@ -114,6 +114,6 @@ let checkRunState = () => {
   }
 }
 
-checkRunState()
+//checkRunState()
 
 //setTimeout(collect, 250)
