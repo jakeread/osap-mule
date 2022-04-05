@@ -22,13 +22,13 @@ import NetDoodler from '../osapjs/client/netrunner/netDoodler.js'
 console.log("hello mule ui")
 
 // the osap root node:
-let osap = new OSAP()
+let osap = new OSAP("mule-client")
 
 let grid = new Grid()
 
 // -------------------------------------------------------- SETUP NETWORK / PORT 
 
-let wscVPort = osap.vPort()
+let wscVPort = osap.vPort("wscVPort")
 
 let LOGPHY = false
 

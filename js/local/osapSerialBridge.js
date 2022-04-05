@@ -92,7 +92,6 @@ WSSPipe.start().then((ws) => {
 // -------------------------------------------------------- USB Serial VPort
 
 // we'd like to periodically poke around and find new ports... 
-
 let pidCandidates = [
   '801E', '80CB', '8031', '80CD'
 ]
@@ -121,36 +120,5 @@ let portSweeper = () => {
     setTimeout(portSweeper, 500)
   })
 }
+
 portSweeper()
-
-/*
-let findSerialPort = (pid) => {
-  console.log(`SERPORT hunt for productId: ${pid}`)
-  return new Promise((resolve, reject) => {
-    SerialPort.list().then((ports) => {
-      let found = false
-      for (let port of ports) {
-        console.log(`found port w/ productId: ${port.productId}`)
-        if (port.productId === pid) {
-          found = true
-          resolve(port.path)
-          break
-        }
-      }
-      if (!found) reject(`serialport w/ productId: ${pid} not found`)
-    }).catch((err) => {
-      reject(err)
-    })
-  })
-}
-
-// D21 Gemma is 801E, 
-// D21 QTPY is 80CB,
-// D51 M4 is 8031, 
-// D51 CAN is 80CD, 
-
-findSerialPort('80CD').then((portName) => {
-  console.log(`FOUND desired prt at ${portName}, launching vport...`)
-  let vp = new VPortSerial(osap, portName)
-})
-*/
