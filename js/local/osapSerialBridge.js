@@ -91,6 +91,39 @@ WSSPipe.start().then((ws) => {
 
 // -------------------------------------------------------- USB Serial VPort
 
+// we'd like to periodically poke around and find new ports... 
+
+let pidCandidates = [
+  '801E', '80CB', '8031', '80CD'
+]
+let activePorts = []
+let portSweeper = () => {
+  SerialPort.list().then((ports) => {
+    for(let port of ports){
+      let cand = pidCandidates.find(elem => elem == port.productId)
+      if(cand && !activePorts.find(elem => elem.portName == port.path)){ 
+        // we have a match, but haven't already opened this port, 
+        console.log(`FOUND desired prt at ${port.path}, launching vport...`)
+        activePorts.push(new VPortSerial(osap, port.path))
+        console.log(activePorts)
+      }
+    }
+    // also... check deadies, 
+    for(let vp of activePorts){
+      if(vp.status == "closed"){
+        console.log(`CLOSED and rming ${vp.portName}`)
+        console.log('at indice...', activePorts.findIndex(elem => elem == vp))
+        activePorts.splice(activePorts.findIndex(elem => elem == vp), 1)
+        console.log(activePorts)
+      }
+    }
+    // set a timeout, 
+    setTimeout(portSweeper, 500)
+  })
+}
+portSweeper()
+
+/*
 let findSerialPort = (pid) => {
   console.log(`SERPORT hunt for productId: ${pid}`)
   return new Promise((resolve, reject) => {
@@ -120,3 +153,4 @@ findSerialPort('80CD').then((portName) => {
   console.log(`FOUND desired prt at ${portName}, launching vport...`)
   let vp = new VPortSerial(osap, portName)
 })
+*/
