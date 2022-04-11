@@ -137,4 +137,16 @@ let checkRunState = () => {
 
 checkRunState()
 
+// to drag... 
+window.addEventListener('mousedown', (evt) => {
+  // capture down handler...
+  evt.preventDefault(); evt.stopPropagation();
+  // target is... 
+  console.log(evt.target) 
+  // set drag handler, 
+  DT.dragTool((drag) => {
+
+  })
+})
+
 //setTimeout(collect, 250)
