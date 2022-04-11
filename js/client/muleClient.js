@@ -88,21 +88,42 @@ jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
 
 // ---------------------------------------------- App... 
 
-let ddlr = new NetDoodler(120, 120)
+// top level UI state ? 
+
+let stateDisplay = new TextBlock(500, 110, 84, 40, 'idle')
+window.setState = (state) => {
+  window.state = state 
+  stateDisplay.setText(state)
+}
+
+let lastUUID = 0
+window.getNewElementUUID = () => {
+  return lastUUID ++ 
+}
+
+let ddlr = new NetDoodler(0, 0)
 
 let runState = true
-let runBtn = new Button(10, 10, 100, 100, 'sweeping')
+let runBtn = new Button(500, 10, 84, 84, 'sweeping')
 runBtn.onClick((evt) => {
   runState = !runState
   checkRunState()
 })
 
-let collect = () => {
+let collect = async () => {
   if(!runState) return 
-  osap.netRunner.sweep().then((net) => {
-    ddlr.redraw(net)
+  try {
+    window.setState('traversing')
+    let net = await osap.netRunner.sweep()
+    // check for drags here... 
+    if(window.state != 'traversing'){
+      console.error('should hang, right?')
+    }
+    await ddlr.redraw(net)
     setTimeout(collect, 1000)
-  })
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 let checkRunState = () => {
