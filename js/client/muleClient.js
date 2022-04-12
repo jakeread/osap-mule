@@ -17,7 +17,7 @@ import { PK, TS, VT, EP, TIMES } from '../osapjs/core/ts.js'
 
 import Grid from '../osapjs/client/interface/grid.js' // main drawing API 
 import { Button, EZButton, TextBlock, TextInput } from '../osapjs/client/interface/basics.js'
-import NetDoodler from '../osapjs/client/netrunner/netDoodler.js'
+import NetDoodler from '../osapjs/client/doodler/netDoodler.js'
 
 console.log("hello mule ui")
 
@@ -88,28 +88,10 @@ jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
 
 // ---------------------------------------------- App... 
 
-// top level UI state ? 
+// it ain't pretty, but we set a window global net doodler instance 
+window.nd = new NetDoodler(osap, 0, 0)
 
-let stateDisplay = new TextBlock(500, 110, 84, 40, 'idle')
-window.setState = (state) => {
-  window.state = state 
-  stateDisplay.setText(state)
-}
-
-let lastUUID = 0
-window.getNewElementUUID = () => {
-  return lastUUID ++ 
-}
-
-let ddlr = new NetDoodler(0, 0)
-
-let runState = true
-let runBtn = new Button(500, 10, 84, 84, 'sweeping')
-runBtn.onClick((evt) => {
-  runState = !runState
-  checkRunState()
-})
-
+/*
 let collect = async () => {
   if(!runState) return 
   try {
@@ -136,17 +118,4 @@ let checkRunState = () => {
 }
 
 checkRunState()
-
-// to drag... 
-window.addEventListener('mousedown', (evt) => {
-  // capture down handler...
-  evt.preventDefault(); evt.stopPropagation();
-  // target is... 
-  console.log(evt.target) 
-  // set drag handler, 
-  DT.dragTool((drag) => {
-
-  })
-})
-
-//setTimeout(collect, 250)
+*/
