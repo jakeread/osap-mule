@@ -11,7 +11,7 @@ body {
 	overflow: hidden;
 	margin: 0px;
 	padding: 0px;
-	font-family: Palatino, serif;
+	font-family: 'Courier New', Courier, monospace;
 	font-size: 11px;
 }
 
@@ -38,6 +38,25 @@ body {
 
 .pad {
 	position: absolute;
+}
+
+/* doodler elements */
+/* black background so that not-sub'd elements are annoying... */
+/* so that you do this "properly" ? */
+
+.ddlrElement {
+	position: absolute;
+	border: none;
+	border-radius: 3px;
+	background-color: rgb(22, 22, 22);
+}
+
+.gvtRoot {
+	background-color: rgb(190, 190, 190);
+}
+
+.gvtChild {
+	background-color: rgb(205, 205, 205);
 }
 
 /* svg bs */
