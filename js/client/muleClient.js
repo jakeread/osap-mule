@@ -91,6 +91,16 @@ jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
 // it ain't pretty, but we set a window global net doodler instance 
 window.nd = new NetDoodler(osap, 0, 0)
 
+// throw a demo endpoint down, 
+
+let demoEP = osap.endpoint()
+demoEP.onData = (buffer) => {
+  return new Promise((resolve, reject) => {
+    console.warn('demo ep rx', buffer)
+    resolve()
+  })
+}
+
 /*
 let collect = async () => {
   if(!runState) return 
