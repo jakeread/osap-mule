@@ -23,6 +23,8 @@ console.log("hello mule ui")
 
 // the osap root node:
 let osap = new OSAP("mule-client")
+// nasty global... we love to see it 
+window.osap = osap 
 
 let grid = new Grid()
 
