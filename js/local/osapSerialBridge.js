@@ -31,7 +31,7 @@ osap.description = "node featuring wss to client and usbserial cobs connection t
 let wssVPort = osap.vPort("wssVPort")   // 0
 
 // test endpoint, lives at indice #2 
-let ep2 = osap.endpoint()
+let ep2 = osap.endpoint("localTestEP")
 // we can attach 'onData' handlers, which fire whenever something is tx'd to us: 
 ep2.onData = (buffer) => {
   return new Promise((resolve, reject) => {
