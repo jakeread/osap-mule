@@ -93,13 +93,14 @@ window.nd = new NetDoodler(osap, 0, 0)
 
 // throw a demo endpoint down, 
 
-let demoEP = osap.endpoint()
+let demoEP = osap.endpoint("demobb")
 demoEP.onData = (buffer) => {
   return new Promise((resolve, reject) => {
     console.warn('demo ep rx', buffer)
     resolve()
   })
 }
+demoEP.addRoute(PK.route().sib(0).pfwd().sib(2).pfwd().end())
 
 /*
 let collect = async () => {
