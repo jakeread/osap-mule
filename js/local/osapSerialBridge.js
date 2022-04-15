@@ -38,9 +38,6 @@ ep2.onData = (buffer) => {
     try {
       // data isn't typed: these are a 'typedarray' (a native javascript type / class, which is memory-competent)
       console.log('the buffer', buffer)
-      // in this example, I've transmitted a floating point number, so I want to read that out... as a float, not this serialized set of bytes 
-      let fp = TS.read('float32', buffer, 0)
-      console.log('the floating point', fp)
     } catch (err) {
       console.error(err)
     }

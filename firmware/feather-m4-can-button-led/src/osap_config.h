@@ -26,6 +26,7 @@ no warranty is provided, and users accept all liability.
 
 // count of routes each endpoint can have, 
 #define ENDPOINT_MAX_ROUTES 4
+#define ENDPOINT_ROUTE_MAX_LEN 64 
 
 // if this is defined, please also provide an osap_debug.h 
 #define OSAP_DEBUG 
