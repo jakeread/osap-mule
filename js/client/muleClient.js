@@ -103,6 +103,7 @@ demoEP.onData = (buffer) => {
   })
 }
 demoEP.addRoute(PK.route().sib(0).pfwd().sib(2).pfwd().end())
+//demoEP.addRoute(PK.route().sib(0).pfwd().sib(1).end())
 
 /*
 let collect = async () => {
