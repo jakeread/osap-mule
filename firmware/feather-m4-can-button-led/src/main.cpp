@@ -8,7 +8,7 @@
 
 // application kit 
 #define BUTTON_PIN 9 
-#define LED_PIN 6 
+#define LED_PIN 6
 
 // ------------------------------------ Root Vertex 
 
@@ -36,7 +36,7 @@ Endpoint ep_button(&osap, "button");
 unsigned long lastDataPull = 0;
 
 EP_ONDATA_RESPONSES onLEDData(uint8_t* data, uint16_t len){
-  //DEBUG("rx: " + String(len) + " " + data[0] + " " + data[1]);
+  // DEBUG("rx: " + String(len) + " " + data[0] + " " + data[1]);
   //digitalWrite(A4, !digitalRead(A4));
   if(data[0]){
     digitalWrite(LED_PIN, HIGH);
