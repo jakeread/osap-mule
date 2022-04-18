@@ -59,7 +59,7 @@ void setup() {
   vpUSBSer.begin();
   vpSer1.begin(1000000);
   //setup a route... 
-  ep_button.addRoute((new EndpointRoute(EP_ROUTEMODE_ACKED))->pfwd(1)->sib(3)); 
+  // ep_button.addRoute((new EndpointRoute(EP_ROUTEMODE_ACKED))->pfwd(1)->sib(3)); 
   //RouteBuilder* rt = (new RouteBuilder())->sib(3)->pfwd(1);
   // ep_button.addRoute(&epr_button);
 }
