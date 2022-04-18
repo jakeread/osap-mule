@@ -45,7 +45,7 @@ ep2.onData = (buffer) => {
   })
 }
 
-ep2.addRoute(PK.route().sib(2).pfwd().sib(2).end())
+//ep2.addRoute(PK.route().sib(2).pfwd().sib(2).end())
 
 // then resolves with the connected webSocketServer to us 
 let LOGWSSPHY = false 
