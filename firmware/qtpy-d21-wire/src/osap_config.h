@@ -30,5 +30,6 @@ no warranty is provided, and users accept all liability.
 
 // if this is defined, please also provide an osap_debug.h 
 #define OSAP_DEBUG 
+//#define INCLUDE_WIRE_VPORT
 
 #endif 
