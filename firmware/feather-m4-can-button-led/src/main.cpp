@@ -6,6 +6,8 @@
 #include "osape_arduino/vp_arduinoSerial.h"
 #include "osap_debug.h"
 
+#define SERPORT_BAUD 576000
+
 // application kit 
 #define BUTTON_PIN 9 
 #define LED_PIN 6
@@ -57,7 +59,7 @@ void setup() {
   pinMode(BUTTON_PIN, INPUT);
   // links need beginnings 
   vpUSBSer.begin();
-  vpSer1.begin(1000000);
+  vpSer1.begin(SERPORT_BAUD);
   //setup a route... 
   // ep_button.addRoute((new EndpointRoute(EP_ROUTEMODE_ACKED))->pfwd(1)->sib(3)); 
   //RouteBuilder* rt = (new RouteBuilder())->sib(3)->pfwd(1);

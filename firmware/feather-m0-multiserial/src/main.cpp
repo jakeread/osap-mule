@@ -4,6 +4,8 @@
 #include "osape/vertices/endpoint.h"
 #include "osape_arduino/vp_arduinoSerial.h"
 
+#define SERPORT_BAUD 576000
+
 OSAP osap("osap-mule-router");
 
 VPort_ArduinoSerial vpUSBSerial(&osap, "usbSerial", &Serial);
@@ -16,20 +18,20 @@ void setup() {
   // setup all of the serials... 
   // these are OK by default, I think ? 
   vpUSBSerial.begin(9600);
-  vpSerial1.begin(1000000);
+  vpSerial1.begin(SERPORT_BAUD);
   //Serial1.begin(1000000);  // 0: RX, 1: TX
   // this needs pin reassignment, 
-  vpSerial2.begin(1000000);
+  vpSerial2.begin(SERPORT_BAUD);
   //Serial2.begin(1000000); // 11: RX, 10: TX
   pinPeripheral(10, PIO_SERCOM);
   pinPeripheral(11, PIO_SERCOM);
   // on ?
-  vpSerial3.begin(1000000);
+  vpSerial3.begin(SERPORT_BAUD);
   //Serial3.begin(1000000); // 22 (MISO): RX, 23 (MOSI): TX
   pinPeripheral(23, PIO_SERCOM_ALT);
   pinPeripheral(22, PIO_SERCOM_ALT);
   // good luck...
-  vpSerial4.begin(1000000);
+  vpSerial4.begin(SERPORT_BAUD);
   //Serial4.begin(1000000); // 12: RX, 6: TX
   pinPeripheral(12, PIO_SERCOM_ALT);
   pinPeripheral(6, PIO_SERCOM_ALT);
