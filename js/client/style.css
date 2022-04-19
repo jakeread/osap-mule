@@ -126,6 +126,7 @@ body {
 	background-color: #f5f5f5;
 	font-family: 'Courier New', Courier, monospace;
 	display:flex;
+	border-radius: 3px;
 	justify-content: center;
 	align-items: center;
 	font-size: 11px;
@@ -146,6 +147,7 @@ body {
 
 .textBlock {
 	background-color: #f5f5f5;
+	border-radius: 3px;
 	font-family: 'Courier New', Courier, monospace;
 	display:flex;
 	justify-content: center;

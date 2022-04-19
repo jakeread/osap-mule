@@ -91,7 +91,7 @@ jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
 // ---------------------------------------------- App... 
 
 // it ain't pretty, but we set a window global net doodler instance 
-window.nd = new NetDoodler(osap, 0, 0)
+window.nd = new NetDoodler(osap, 10, 10)
 
 // throw a demo endpoint down, 
 
@@ -103,7 +103,7 @@ demoEP.onData = (buffer) => {
   })
 }
 //demoEP.addRoute(PK.route().sib(0).pfwd().sib(2).pfwd().end())
-demoEP.addRoute(PK.route().sib(0).pfwd().sib(1).end())
+//demoEP.addRoute(PK.route().sib(0).pfwd().sib(1).end())
 
 /*
 let collect = async () => {

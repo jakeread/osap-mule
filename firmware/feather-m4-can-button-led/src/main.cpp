@@ -65,7 +65,7 @@ void setup() {
 }
 
 uint32_t lastTick = 0;
-uint32_t tickTime = 500;
+uint32_t tickTime = 50;
 
 void loop() {
   // osap's gotta operate, 
