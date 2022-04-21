@@ -19,3 +19,9 @@
 [submodule "firmware/feather-m0-multiserial/src/osape_arduino"]
 	path = firmware/feather-m0-multiserial/src/osape_arduino
 	url = git@github.com:jakeread/osape_arduino.git
+[submodule "firmware/qtpy-d21-bno/src/osape"]
+	path = firmware/qtpy-d21-bno/src/osape
+	url = git@github.com:jakeread/osape.git
+[submodule "firmware/qtpy-d21-bno/src/osape_arduino"]
+	path = firmware/qtpy-d21-bno/src/osape_arduino
+	url = git@github.com:jakeread/osape_arduino.git

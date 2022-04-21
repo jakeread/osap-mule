@@ -16,6 +16,7 @@ import OSAP from '../osapjs/core/osapRoot.js'
 import { PK, TS, VT, EP, TIMES } from '../osapjs/core/ts.js'
 
 import Grid from '../osapjs/client/interface/grid.js' // main drawing API 
+import DT from '../osapjs/client/interface/domTools.js'
 import { Button, EZButton, TextBlock, TextInput } from '../osapjs/client/interface/basics.js'
 import NetDoodler from '../osapjs/client/doodler/netDoodler.js'
 
@@ -93,15 +94,90 @@ jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
 // it ain't pretty, but we set a window global net doodler instance 
 window.nd = new NetDoodler(osap, 10, 10)
 
-// throw a demo endpoint down, 
+// if you want to run the accelerometer demo... 
 
-let demoEP = osap.endpoint("demobb")
-demoEP.onData = (buffer) => {
+/*
+
+let x = null, y = null, z = null 
+
+// throw a demo endpoint down, 
+let xEP = osap.endpoint("x_orientation")
+xEP.onData = (buffer) => {
   return new Promise((resolve, reject) => {
-    console.warn('demo ep rx', buffer)
+    let float = TS.read('float32', buffer, 0)
+    x = float 
+    // get that *float* 
+    // console.warn('x rx', float)
     resolve()
   })
 }
+
+let yEP = osap.endpoint("y_orientation")
+yEP.onData = (buffer) => {
+  return new Promise((resolve, reject) => {
+    let float = TS.read('float32', buffer, 0)
+    y = float 
+    // get that *float* 
+    // console.warn('y rx', float)
+    resolve()
+  })
+}
+
+let zEP = osap.endpoint("z_orientation")
+zEP.onData = (buffer) => {
+  return new Promise((resolve, reject) => {
+    let float = TS.read('float32', buffer, 0)
+    z = float 
+    // get that *float* 
+    // console.warn('z rx', float)
+    resolve()
+  })
+}
+
+// let's make a three.js thing 
+
+import * as THREE from './three.js'
+
+// init
+
+let threeWidth = 700, threeHeight = 500
+
+const camera = new THREE.PerspectiveCamera( 70, threeWidth / threeHeight, 0.01, 10 );
+camera.position.z = 1;
+
+const scene = new THREE.Scene();
+
+const geometry = new THREE.BoxGeometry( 0.5, 0.5, 0.5 );
+const material = new THREE.MeshNormalMaterial();
+
+const mesh = new THREE.Mesh( geometry, material );
+scene.add( mesh );
+
+const renderer = new THREE.WebGLRenderer( { antialias: true } );
+renderer.setSize( threeWidth, threeHeight );
+renderer.setAnimationLoop( animation );
+
+let ground = $(`<div></div>`).get(0)
+DT.placeField(ground, threeWidth, threeHeight, 10, 450)
+
+ground.appendChild( renderer.domElement );
+
+// animation
+
+function animation( time ) {
+  if(x) mesh.rotation.x = THREE.MathUtils.degToRad(360 - x)
+  if(y) mesh.rotation.y = THREE.MathUtils.degToRad(360 - y) 
+  if(z) mesh.rotation.z = THREE.MathUtils.degToRad(z)
+
+	//mesh.rotation.x = time / 2000;
+	//mesh.rotation.y = time / 1000;
+
+	renderer.render( scene, camera );
+
+}
+
+*/
+
 //demoEP.addRoute(PK.route().sib(0).pfwd().sib(2).pfwd().end())
 //demoEP.addRoute(PK.route().sib(0).pfwd().sib(1).end())
 
