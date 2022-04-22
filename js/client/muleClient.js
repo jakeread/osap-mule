@@ -22,34 +22,37 @@ import NetDoodler from '../osapjs/client/doodler/netDoodler.js'
 
 console.log("hello mule ui")
 
-// the osap root node:
+// we make the OSAP root vertex like this, and give it a name:
 let osap = new OSAP("mule-client")
-// nasty global... we love to see it 
+// attach that to the global space, some rendering functions use it 
 window.osap = osap 
 
+// 'grid' is just boilerplate UI code... 
 let grid = new Grid()
 
 // -------------------------------------------------------- SETUP NETWORK / PORT 
 
+// in JS, we just instantiate a blank vport and then attach methods to it later on, 
 let wscVPort = osap.vPort("wscVPort")
 
+// verbosity 
 let LOGPHY = false
-
 // to test these systems, the client (us) will kickstart a new process
 // on the server, and try to establish connection to it.
 console.log("making client-to-server request to start remote process,")
 console.log("and connecting to it w/ new websocket")
+
 // ok, let's ask to kick a process on the server,
 // in response, we'll get it's IP and Port,
 // then we can start a websocket client to connect there,
 // automated remote-proc. w/ vPort & wss medium,
 // for args, do '/processName.js?args=arg1,arg2'
-
 jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
   if (res.includes('OSAP-wss-addr:')) {
     let addr = res.substring(res.indexOf(':') + 2)
     if (addr.includes('ws://')) {
       let status = "opening"
+      // i.e. here we attach the "clear to send" function, 
       wscVPort.cts = () => {
         if (status == "open") {
           return true
@@ -91,10 +94,32 @@ jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
 
 // ---------------------------------------------- App... 
 
+// we can instantiate new endpoints like this:
+let demoEP = osap.endpoint("demoEndpoint")
+// and attach handlers for data, 
+demoEP.onData = (buffer) => {
+  // onData handlers should return promises,
+  // these are flowcontrolled... so if we are recieving a big stream of messages we can 
+  // extert some backpressure by resolving *later on* 
+  return new Promise((resolve, reject) => {
+    console.log('demoEP rxd this buffer', buffer)
+    // if we resolve it, that buffer's data should be written into the endpoint:
+    resolve()
+    // if we reject it, the data vanishes, and the endpoint keeps its old state 
+  })
+}
+
+// we can add routes to endpoints like this:
+//demoEP.addRoute(PK.route().sib(0).pfwd().sib(2).pfwd().end())
+//demoEP.addRoute(PK.route().sib(0).pfwd().sib(1).end())
+
+
+// the 'net doodler' is the rendering engine that is *very* new and a little uggo, 
+// if you don't want to run it, just comment this line out. 
 // it ain't pretty, but we set a window global net doodler instance 
 window.nd = new NetDoodler(osap, 10, 10)
 
-// if you want to run the accelerometer demo... 
+// if you want to run the accelerometer demo, uncomment the lines below: 
 
 /*
 
@@ -178,34 +203,3 @@ function animation( time ) {
 
 */
 
-//demoEP.addRoute(PK.route().sib(0).pfwd().sib(2).pfwd().end())
-//demoEP.addRoute(PK.route().sib(0).pfwd().sib(1).end())
-
-/*
-let collect = async () => {
-  if(!runState) return 
-  try {
-    window.setState('traversing')
-    let net = await osap.netRunner.sweep()
-    // check for drags here... 
-    if(window.state != 'traversing'){
-      console.error('should hang, right?')
-    }
-    await ddlr.redraw(net)
-    setTimeout(collect, 1000)
-  } catch (err) {
-    console.error(err)
-  }
-}
-
-let checkRunState = () => {
-  if(runState){
-    runBtn.green()
-    collect()
-  } else {
-    runBtn.red()
-  }
-}
-
-checkRunState()
-*/
