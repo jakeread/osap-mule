@@ -2,7 +2,7 @@
 
 This is my stash of demo and test projects for [OSAP](http://osap.tools). 
 
-To build and run a JavaScript example, see [/js]. Embedded examples are in [/firmware]. 
+To build and run a JavaScript example, see [/js](js). Embedded examples are in [/firmware](firmware). 
 
 This repo contains many instances of the following [submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules):
 
