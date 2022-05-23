@@ -1,27 +1,27 @@
 [submodule "firmware/feather-m4-can-button-led/src/osape"]
 	path = firmware/feather-m4-can-button-led/src/osape
-	url = git@github.com:jakeread/osape.git
+	url = https://github.com/jakeread/osape.git
 [submodule "js/osapjs"]
 	path = js/osapjs
-	url = git@github.com:jakeread/osapjs.git
+	url = https://github.com/jakeread/osapjs.git
 [submodule "firmware/feather-m4-can-button-led/src/osape_arduino"]
 	path = firmware/feather-m4-can-button-led/src/osape_arduino
-	url = git@github.com:jakeread/osape_arduino.git
+	url = https://github.com/jakeread/osape_arduino.git
 [submodule "firmware/qtpy-d21-wire/src/osape"]
 	path = firmware/qtpy-d21-wire/src/osape
-	url = git@github.com:jakeread/osape.git
+	url = https://github.com/jakeread/osape.git
 [submodule "firmware/qtpy-d21-wire/src/osape_arduino"]
 	path = firmware/qtpy-d21-wire/src/osape_arduino
-	url = git@github.com:jakeread/osape_arduino.git
+	url = https://github.com/jakeread/osape_arduino.git
 [submodule "firmware/feather-m0-multiserial/src/osape"]
 	path = firmware/feather-m0-multiserial/src/osape
-	url = git@github.com:jakeread/osape.git
+	url = https://github.com/jakeread/osape.git
 [submodule "firmware/feather-m0-multiserial/src/osape_arduino"]
 	path = firmware/feather-m0-multiserial/src/osape_arduino
-	url = git@github.com:jakeread/osape_arduino.git
+	url = https://github.com/jakeread/osape_arduino.git
 [submodule "firmware/qtpy-d21-bno/src/osape"]
 	path = firmware/qtpy-d21-bno/src/osape
-	url = git@github.com:jakeread/osape.git
+	url = https://github.com/jakeread/osape.git
 [submodule "firmware/qtpy-d21-bno/src/osape_arduino"]
 	path = firmware/qtpy-d21-bno/src/osape_arduino
-	url = git@github.com:jakeread/osape_arduino.git
+	url = https://github.com/jakeread/osape_arduino.git
