@@ -23,7 +23,7 @@ import NetDoodler from '../osapjs/client/doodler/netDoodler.js'
 console.log("hello mule ui")
 
 // we make the OSAP root vertex like this, and give it a name:
-let osap = new OSAP("mule-client")
+let osap = new OSAP("mule-client-newtransport")
 // attach that to the global space, some rendering functions use it 
 window.osap = osap 
 
