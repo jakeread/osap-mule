@@ -25,3 +25,9 @@
 [submodule "firmware/qtpy-d21-bno/src/osape_arduino"]
 	path = firmware/qtpy-d21-bno/src/osape_arduino
 	url = https://github.com/jakeread/osape_arduino.git
+[submodule "firmware/qtpy-d21-vl53/src/osape"]
+	path = firmware/qtpy-d21-vl53/src/osape
+	url = https://github.com/jakeread/osape.git
+[submodule "firmware/qtpy-d21-vl53/src/osape_arduino"]
+	path = firmware/qtpy-d21-vl53/src/osape_arduino
+	url = https://github.com/jakeread/osape_arduino.git
