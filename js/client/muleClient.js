@@ -34,9 +34,12 @@ let grid = new Grid()
 let wscVPort = osap.vPort("wscVPort")
 
 // just going to try writing packets,
+let dEp1 = osap.endpoint("dummy1")
+let dEp2 = osap.endpoint("dummy2")
 
 //let dmRoute = PK.route().sib(0).pfwd().sib(258).pfwd().bbrd(12).end()
-let dmRoute = PK.route().sib(0).pfwd().sib(1).end()
+let dmRoute = PK.route().child(0).pfwd().sib(1).end() 
+//let dmRoute = PK.route().child(1).sib(2).sib(0).pfwd().sib(1).end()
 console.warn(dmRoute)
 PK.logPacket(dmRoute, true)
 setTimeout(() => {
