@@ -30,10 +30,11 @@ osap.description = "node featuring wss to client and usbserial cobs connection t
 
 let wssVPort = osap.vPort("wssVPort")   // 0
 
-// test endpoint, lives at indice #2 
-let ep2 = osap.endpoint("localTestEP")
+// test endpoint, lives at indice #1 
+
+let ep1 = osap.endpoint("localTestEP")
 // we can attach 'onData' handlers, which fire whenever something is tx'd to us: 
-ep2.onData = (buffer) => {
+ep1.onData = (buffer) => {
   return new Promise((resolve, reject) => {
     try {
       // data isn't typed: these are a 'typedarray' (a native javascript type / class, which is memory-competent)

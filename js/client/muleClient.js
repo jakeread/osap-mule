@@ -25,72 +25,27 @@ console.log("hello mule ui")
 // we make the OSAP root vertex like this, and give it a name:
 let osap = new OSAP("mule-client-newtransport")
 // attach that to the global space, some rendering functions use it 
-window.osap = osap 
+window.osap = osap
 
 // 'grid' is just boilerplate UI code... 
 let grid = new Grid()
 
-// -------------------------------------------------------- SETUP NETWORK / PORT 
-
 // in JS, we just instantiate a blank vport and then attach methods to it later on, 
 let wscVPort = osap.vPort("wscVPort")
 
-// verbosity 
-let LOGPHY = false
-// to test these systems, the client (us) will kickstart a new process
-// on the server, and try to establish connection to it.
-console.log("making client-to-server request to start remote process,")
-console.log("and connecting to it w/ new websocket")
+// just going to try writing packets,
 
-// ok, let's ask to kick a process on the server,
-// in response, we'll get it's IP and Port,
-// then we can start a websocket client to connect there,
-// automated remote-proc. w/ vPort & wss medium,
-// for args, do '/processName.js?args=arg1,arg2'
-jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
-  if (res.includes('OSAP-wss-addr:')) {
-    let addr = res.substring(res.indexOf(':') + 2)
-    if (addr.includes('ws://')) {
-      let status = "opening"
-      // i.e. here we attach the "clear to send" function, 
-      wscVPort.cts = () => {
-        if (status == "open") {
-          return true
-        } else {
-          return false
-        }
-      }
-      // start up, 
-      console.log('starting socket to remote at', addr)
-      let ws = new WebSocket(addr)
-      ws.binaryType = "arraybuffer"
-      // opens, 
-      ws.onopen = (evt) => {
-        status = "open"
-        // implement rx
-        ws.onmessage = (msg) => {
-          let uint = new Uint8Array(msg.data)
-          wscVPort.receive(uint)
-        }
-        // implement tx 
-        wscVPort.send = (buffer) => {
-          if (LOGPHY) console.log('PHY WSC Send', buffer)
-          ws.send(buffer)
-        }
-      }
-      ws.onerror = (err) => {
-        status = "closed"
-        console.log('sckt err', err)
-      }
-      ws.onclose = (evt) => {
-        status = "closed"
-        console.log('sckt closed', evt)
-      }
-    }
-  } else {
-    console.error('remote OSAP not established', res)
-  }
-})
+//let dmRoute = PK.route().sib(0).pfwd().sib(258).pfwd().bbrd(12).end()
+let dmRoute = PK.route().sib(0).pfwd().sib(1).end()
+console.warn(dmRoute)
+PK.logPacket(dmRoute, true)
+setTimeout(() => {
+  osap.ping(dmRoute).then((ms) => {
+    console.log(`ping returns at ${ms}ms`)
+  }).catch((err) => {
+    console.error(`err from ping:`, err)
+  })
+}, 500)
 
 // ---------------------------------------------- App... 
 
@@ -117,7 +72,7 @@ demoEP.onData = (buffer) => {
 // the 'net doodler' is the rendering engine that is *very* new and a little uggo, 
 // if you don't want to run it, just comment this line out. 
 // it ain't pretty, but we set a window global net doodler instance 
-window.nd = new NetDoodler(osap, 10, 10)
+// window.nd = new NetDoodler(osap, 10, 10)
 
 // if you want to run the accelerometer demo, uncomment the lines below: 
 
@@ -194,12 +149,70 @@ function animation( time ) {
   if(y) mesh.rotation.y = THREE.MathUtils.degToRad(360 - y) 
   if(z) mesh.rotation.z = THREE.MathUtils.degToRad(z)
 
-	//mesh.rotation.x = time / 2000;
-	//mesh.rotation.y = time / 1000;
+  //mesh.rotation.x = time / 2000;
+  //mesh.rotation.y = time / 1000;
 
-	renderer.render( scene, camera );
+  renderer.render( scene, camera );
 
 }
 
 */
 
+// -------------------------------------------------------- SETUP NETWORK / PORT 
+
+// verbosity 
+let LOGPHY = false
+// to test these systems, the client (us) will kickstart a new process
+// on the server, and try to establish connection to it.
+console.log("making client-to-server request to start remote process,")
+console.log("and connecting to it w/ new websocket")
+
+// ok, let's ask to kick a process on the server,
+// in response, we'll get it's IP and Port,
+// then we can start a websocket client to connect there,
+// automated remote-proc. w/ vPort & wss medium,
+// for args, do '/processName.js?args=arg1,arg2'
+jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
+  if (res.includes('OSAP-wss-addr:')) {
+    let addr = res.substring(res.indexOf(':') + 2)
+    if (addr.includes('ws://')) {
+      let status = "opening"
+      // i.e. here we attach the "clear to send" function, 
+      wscVPort.cts = () => {
+        if (status == "open") {
+          return true
+        } else {
+          return false
+        }
+      }
+      // start up, 
+      console.log('starting socket to remote at', addr)
+      let ws = new WebSocket(addr)
+      ws.binaryType = "arraybuffer"
+      // opens, 
+      ws.onopen = (evt) => {
+        status = "open"
+        // implement rx
+        ws.onmessage = (msg) => {
+          let uint = new Uint8Array(msg.data)
+          wscVPort.receive(uint)
+        }
+        // implement tx 
+        wscVPort.send = (buffer) => {
+          if (LOGPHY) console.log('PHY WSC Send', buffer)
+          ws.send(buffer)
+        }
+      }
+      ws.onerror = (err) => {
+        status = "closed"
+        console.log('sckt err', err)
+      }
+      ws.onclose = (evt) => {
+        status = "closed"
+        console.log('sckt closed', evt)
+      }
+    }
+  } else {
+    console.error('remote OSAP not established', res)
+  }
+})
