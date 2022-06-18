@@ -42,15 +42,13 @@ dEp2.onData = async (data) => {
 }
 
 // route 2 self, 
-let dmRoute = PK.route().end()
+//let dmRoute = PK.route().end()
 // simple route, to remote, (20ms avg)
 //let dmRoute = PK.route().child(0).pfwd().sib(1).end() 
 // convoluted route, to remote, (21ms avg ping)
 //let dmRoute = PK.route().child(1).sib(2).sib(0).pfwd().sib(1).end()
 // route to local, (18.5ms avg ping)
 //let dmRoute = PK.route().child(1).end()
-console.warn(dmRoute)
-PK.logPacket(dmRoute, true)
 let msAvg = 0 
 let ping = () => {
   osap.ping(dmRoute).then((ms) => {
@@ -74,7 +72,7 @@ let endpointTest = () => {
   dEp1.addRoute(PK.route().sib(2).end())
   dEp1.write(new Uint8Array([51,52,54]), "acked").then(() => {
     console.warn(`EP WRITE OK`)
-    let qr = osap.query(dmRoute)
+    let qr = osap.query(PK.route().sib(1).end())
     qr.pull().then((data) => {
       console.warn(`Query PULL`, data)
     }).catch((err) => {
