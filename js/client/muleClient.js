@@ -36,6 +36,10 @@ let wscVPort = osap.vPort("wscVPort")
 // just going to try writing packets,
 let dEp1 = osap.endpoint("dummy1")
 let dEp2 = osap.endpoint("dummy2")
+dEp2.onData = async (data) => {
+  console.warn(`EP2 RX`, data)
+  await TIMES.delay(500)
+}
 
 // route 2 self, 
 let dmRoute = PK.route().end()
@@ -66,7 +70,22 @@ let scopeTest = () => {
   })
 }
 
-setTimeout(scopeTest, 500)
+let endpointTest = () => {
+  dEp1.addRoute(PK.route().sib(2).end())
+  dEp1.write(new Uint8Array([51,52,54]), "acked").then(() => {
+    console.warn(`EP WRITE OK`)
+    let qr = osap.query(dmRoute)
+    qr.pull().then((data) => {
+      console.warn(`Query PULL`, data)
+    }).catch((err) => {
+      console.error(err) 
+    })
+  }).catch((err) => {
+    console.error(err)
+  })
+}
+
+setTimeout(endpointTest, 500)
 
 // ---------------------------------------------- App... 
 
