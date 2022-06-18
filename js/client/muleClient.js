@@ -37,18 +37,25 @@ let wscVPort = osap.vPort("wscVPort")
 let dEp1 = osap.endpoint("dummy1")
 let dEp2 = osap.endpoint("dummy2")
 
-//let dmRoute = PK.route().sib(0).pfwd().sib(258).pfwd().bbrd(12).end()
-//let dmRoute = PK.route().child(0).pfwd().sib(1).end() 
-let dmRoute = PK.route().child(1).sib(2).sib(0).pfwd().sib(1).end()
+// simple route, to remote, (20ms avg)
+let dmRoute = PK.route().child(0).pfwd().sib(1).end() 
+// convoluted route, to remote, (21ms avg ping)
+//let dmRoute = PK.route().child(1).sib(2).sib(0).pfwd().sib(1).end()
+// route to local, (18.5ms avg ping)
+//let dmRoute = PK.route().child(1).end()
 console.warn(dmRoute)
 PK.logPacket(dmRoute, true)
-setTimeout(() => {
+let msAvg = 0 
+let ping = () => {
   osap.ping(dmRoute).then((ms) => {
-    console.log(`ping returns at ${ms}ms`)
+    ping()
+    msAvg = msAvg * 0.99 + ms * 0.01
+    console.log(`ping returning at ${msAvg.toFixed(2)}ms`)
   }).catch((err) => {
     console.error(`err from ping:`, err)
   })
-}, 500)
+}
+setTimeout(ping, 500)
 
 // ---------------------------------------------- App... 
 
