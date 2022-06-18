@@ -63,7 +63,8 @@ app.get('/startLocal/:file', (req, res) => {
     pack = pack.concat(msg)
     let index = pack.indexOf('\n')
     while(index >= 0){
-      console.log(`${process.fileName} ${process.pid}: ${pack.substring(0, index)}`)
+      console.log(pack.substring(0, index))
+      //console.log(`${process.fileName} ${process.pid}: ${pack.substring(0, index)}`)
       pack = pack.slice(index + 1)
       index = pack.indexOf('\n')
     }
@@ -73,7 +74,8 @@ app.get('/startLocal/:file', (req, res) => {
       res.send('err in local script')
       replied = true
     }
-    console.log(`${process.fileName} ${process.pid} err:`, err.toString())
+    //console.log(`${process.fileName} ${process.pid} err:`, err.toString())
+    console.log(err.toString())
   })
   process.on('close', (code) => {
     console.log(`${process.fileName} ${process.pid} closes:`, code)
