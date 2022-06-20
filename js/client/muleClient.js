@@ -72,12 +72,26 @@ let scopeTest = () => {
 //setTimeout(scopeTest, 500)
 
 let endpointTest = () => {
+  here 
+  // also, my dude, do... this as a big async loop, pls 
   dEp1.addRoute(PK.route().sib(2).end())
   dEp1.write(new Uint8Array([51,52,54]), "acked").then(() => {
     console.warn(`EP WRITE OK`)
     let qr = osap.query(PK.route().sib(1).end())
     qr.pull().then((data) => {
       console.warn(`Query PULLS`, data)
+      // now let's do remote-add to *that* endpoint, 
+      // this is... addressed from osap root, so, 
+      osap.mvc.setEndpointRoute(PK.route().child(2).end(), PK.route().sib(1).end(), "acked").then(() => {
+        console.warn(`Route SET OK`)
+        osap.mvc.removeEndpointRoute(PK.route().child(2).end(), 0).then(() => {
+          console.warn(`Route RM OK`)
+        }).catch((err) => {
+          console.error(err)
+        })
+      }).catch((err) => {
+        console.error(err)
+      })
     }).catch((err) => {
       console.error(err) 
     })
@@ -117,7 +131,6 @@ demoEP.onData = (buffer) => {
 setTimeout(() => {
   window.nd = new NetDoodler(osap, 10, 10)
 }, 500)
-
 
 // if you want to run the accelerometer demo, uncomment the lines below: 
 
