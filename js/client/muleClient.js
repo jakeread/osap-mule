@@ -48,7 +48,7 @@ let dmRoute = PK.route().end()
 //let dmRoute = PK.route().child(1).sib(2).sib(0).pfwd().sib(1).end()
 // route to local, (18.5ms avg ping)
 //let dmRoute = PK.route().child(1).end()
-let msAvg = 0 
+let msAvg = 0
 let ping = () => {
   osap.ping(dmRoute).then((ms) => {
     ping()
@@ -71,33 +71,23 @@ let scopeTest = () => {
 
 //setTimeout(scopeTest, 500)
 
-let endpointTest = () => {
-  here 
-  // also, my dude, do... this as a big async loop, pls 
-  dEp1.addRoute(PK.route().sib(2).end())
-  dEp1.write(new Uint8Array([51,52,54]), "acked").then(() => {
+let endpointTest = async () => {
+  try {
+    dEp1.addRoute(PK.route().sib(2).end())
+    await dEp1.write(new Uint8Array([51, 52, 54]), "acked")
     console.warn(`EP WRITE OK`)
     let qr = osap.query(PK.route().sib(1).end())
-    qr.pull().then((data) => {
-      console.warn(`Query PULLS`, data)
-      // now let's do remote-add to *that* endpoint, 
-      // this is... addressed from osap root, so, 
-      osap.mvc.setEndpointRoute(PK.route().child(2).end(), PK.route().sib(1).end(), "acked").then(() => {
-        console.warn(`Route SET OK`)
-        osap.mvc.removeEndpointRoute(PK.route().child(2).end(), 0).then(() => {
-          console.warn(`Route RM OK`)
-        }).catch((err) => {
-          console.error(err)
-        })
-      }).catch((err) => {
-        console.error(err)
-      })
-    }).catch((err) => {
-      console.error(err) 
-    })
-  }).catch((err) => {
+    let data = await qr.pull()
+    console.warn(`Query PULLS`, data)
+    // now let's do remote-add to *that* endpoint, 
+    // this is... addressed from osap root, so, 
+    await osap.mvc.setEndpointRoute(PK.route().child(2).end(), PK.route().sib(1).end())
+    console.warn(`Route SET OK`)
+    await osap.mvc.removeEndpointRoute(PK.route().child(2).end(), 0)
+    console.warn(`Route RM OK`)
+  } catch (err) {
     console.error(err)
-  })
+  }
 }
 
 setTimeout(endpointTest, 200)
