@@ -46,7 +46,7 @@ dEp2.onData = async (data) => {
 // simple route, to remote, (20ms avg)
 //let dmRoute = PK.route().child(0).pfwd().sib(1).end() 
 // convoluted route, to remote, (21ms avg ping)
-//let dmRoute = PK.route().child(1).sib(2).sib(0).pfwd().sib(1).end()
+let dmRoute = PK.route().child(1).sib(2).sib(0).pfwd().sib(1).end()
 // route to local, (18.5ms avg ping)
 //let dmRoute = PK.route().child(1).end()
 let msAvg = 0 
@@ -60,6 +60,8 @@ let ping = () => {
   })
 }
 
+// setTimeout(ping, 500)
+
 let scopeTest = () => {
   osap.scope(dmRoute).then((res) => {
     console.warn("scope returns w/ ", res)
@@ -67,6 +69,8 @@ let scopeTest = () => {
     console.error(err)
   })
 }
+
+// setTimeout(scopeTest, 500)
 
 let endpointTest = () => {
   dEp1.addRoute(PK.route().sib(2).end())
@@ -83,7 +87,7 @@ let endpointTest = () => {
   })
 }
 
- setTimeout(endpointTest, 500)
+// setTimeout(endpointTest, 500)
 
 // ---------------------------------------------- App... 
 
@@ -111,7 +115,7 @@ demoEP.onData = (buffer) => {
 // if you don't want to run it, just comment this line out. 
 // it ain't pretty, but we set a window global net doodler instance 
 
-//window.nd = new NetDoodler(osap, 10, 10)
+// window.nd = new NetDoodler(osap, 10, 10)
 
 // if you want to run the accelerometer demo, uncomment the lines below: 
 
