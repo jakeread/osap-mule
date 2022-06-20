@@ -74,7 +74,7 @@ let endpointTest = () => {
     console.warn(`EP WRITE OK`)
     let qr = osap.query(PK.route().sib(1).end())
     qr.pull().then((data) => {
-      console.warn(`Query PULL`, data)
+      console.warn(`Query PULLS`, data)
     }).catch((err) => {
       console.error(err) 
     })
@@ -83,7 +83,7 @@ let endpointTest = () => {
   })
 }
 
-setTimeout(endpointTest, 500)
+ setTimeout(endpointTest, 500)
 
 // ---------------------------------------------- App... 
 
@@ -110,7 +110,8 @@ demoEP.onData = (buffer) => {
 // the 'net doodler' is the rendering engine that is *very* new and a little uggo, 
 // if you don't want to run it, just comment this line out. 
 // it ain't pretty, but we set a window global net doodler instance 
-// window.nd = new NetDoodler(osap, 10, 10)
+
+//window.nd = new NetDoodler(osap, 10, 10)
 
 // if you want to run the accelerometer demo, uncomment the lines below: 
 
