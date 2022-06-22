@@ -118,9 +118,9 @@ demoEP.onData = (buffer) => {
 // if you don't want to run it, just comment this line out. 
 // it ain't pretty, but we set a window global net doodler instance 
 
-setTimeout(() => {
-  window.nd = new NetDoodler(osap, 10, 10)
-}, 500)
+// setTimeout(() => {
+//   window.nd = new NetDoodler(osap, 10, 10)
+// }, 500)
 
 // if you want to run the accelerometer demo, uncomment the lines below: 
 

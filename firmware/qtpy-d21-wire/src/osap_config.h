@@ -28,8 +28,6 @@ no warranty is provided, and users accept all liability.
 #define ENDPOINT_MAX_ROUTES 4
 #define ENDPOINT_ROUTE_MAX_LEN 64 
 
-// if this is defined, please also provide an osap_debug.h 
-#define OSAP_DEBUG 
 //#define INCLUDE_WIRE_VPORT
 
 #endif 

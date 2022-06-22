@@ -44,6 +44,8 @@ VBus_ArduinoWire vbWire(&osap, "wire-vb", &Wire, ADDRESS_SELF);
 */
 // ---------------- Button: 2 
 
+/*
+
 uint8_t btn_down[1] = {1};
 uint8_t btn_up[1] = {0};
 
@@ -63,6 +65,7 @@ EP_ONDATA_RESPONSES onLEDData(uint8_t* data, uint16_t len){
 }
 
 Endpoint ep_led(&osap, "led", onLEDData);
+*/
 
 // ---------------- ARDU 
 
@@ -87,8 +90,9 @@ uint32_t lastTx = 0;
 boolean lastPixelState = false;
 
 void loop() {
-  osap.loop();
+  // loop occasionally, for debug... 
   if(lastTx + 50 < millis()){
+    osap.loop();
     lastTx = millis();
     // flash, 
     lastPixelState = !lastPixelState;
@@ -98,11 +102,14 @@ void loop() {
       pixel.setPixelColor(0, pixel.Color(0,0,0));
     }
     pixel.show();
+    // OSAP::debug("debug test 123...");
+    /*
     // write new state, 
     if(!digitalRead(BTN_INPUT_PIN)){
       ep_button.write(btn_down, 1);
     } else {
       ep_button.write(btn_up, 1);
     }
+    */
   }
 }
