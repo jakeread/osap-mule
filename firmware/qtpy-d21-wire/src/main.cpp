@@ -51,21 +51,29 @@ uint8_t btn_up[1] = {0};
 
 Endpoint ep_button(&osap, "button");
 
-// ---------------- LED: 3 
+*/
+
+// ---------------- LED: 3 (2 w/o button... (!))
 
 EP_ONDATA_RESPONSES onLEDData(uint8_t* data, uint16_t len){
   //DEBUG("rx: " + String(len) + " " + data[0] + " " + data[1]);
   //digitalWrite(A4, !digitalRead(A4));
+  String msg = "endpoint rx " + String(len) + " bytes: ";
+  for(uint8_t i = 0; i < len; i ++){
+    msg += String(data[i]) + ", ";
+  }
+  OSAP::debug(msg);
+  /*
   if(data[0]){
     digitalWrite(OUTPUT_LED_PIN, HIGH);
   } else {
     digitalWrite(OUTPUT_LED_PIN, LOW);
   }
+  */
   return EP_ONDATA_ACCEPT;
 }
 
 Endpoint ep_led(&osap, "led", onLEDData);
-*/
 
 // ---------------- ARDU 
 
