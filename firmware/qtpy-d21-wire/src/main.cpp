@@ -91,7 +91,7 @@ boolean lastPixelState = false;
 
 void loop() {
   // loop occasionally, for debug... 
-  if(lastTx + 50 < millis()){
+  if(lastTx + 100 < millis()){
     osap.loop();
     lastTx = millis();
     // flash, 
