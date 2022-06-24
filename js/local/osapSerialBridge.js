@@ -34,11 +34,11 @@ let wssVPort = osap.vPort("wssVPort")   // 0
 
 let ep1 = osap.endpoint("localTestEP")
 // we can attach 'onData' handlers, which fire whenever something is tx'd to us: 
-ep1.onData = (buffer) => {
+ep1.onData = (data) => {
   return new Promise((resolve, reject) => {
     try {
       // data isn't typed: these are a 'typedarray' (a native javascript type / class, which is memory-competent)
-      console.log('the buffer', buffer)
+      console.log('EP1 rx', data)
     } catch (err) {
       console.error(err)
     }
@@ -117,7 +117,7 @@ let portSweeper = () => {
       }
     }
     // set a timeout, 
-    // setTimeout(portSweeper, 500)
+    setTimeout(portSweeper, 500)
   })
 }
 

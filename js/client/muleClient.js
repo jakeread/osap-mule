@@ -78,6 +78,7 @@ let scopeTest = () => {
 
 let endpointTest = async () => {
   try {
+    /*
     //dEp1.addRoute(PK.route().sib(2).end())
     dEp1.addRoute(PK.route().sib(0).pfwd().sib(2).pfwd().sib(2).end())
     await dEp1.write(new Uint8Array([51, 52, 54]), "acked")
@@ -85,12 +86,15 @@ let endpointTest = async () => {
     let qr = osap.query(PK.route().sib(1).end())
     let data = await qr.pull()
     console.warn(`Query PULLS`, data)
-    return;
+    */
     // now let's do remote-add to *that* endpoint, 
     // this is... addressed from osap root, so, 
-    await osap.mvc.setEndpointRoute(PK.route().child(2).end(), PK.route().sib(1).end())
+    await osap.mvc.setEndpointRoute(dmRoute, PK.route().sib(1).end())
+    console.log(PK.route().sib(1).end())
     console.warn(`Route SET OK`)
-    await osap.mvc.removeEndpointRoute(PK.route().child(2).end(), 0)
+    let route = await osap.mvc.getEndpointRoute(dmRoute, 0)
+    console.warn(`Route GET OK`, route)
+    await osap.mvc.removeEndpointRoute(dmRoute, 0)
     console.warn(`Route RM OK`)
   } catch (err) {
     console.error(err)
@@ -120,14 +124,13 @@ demoEP.onData = (buffer) => {
 //demoEP.addRoute(PK.route().sib(0).pfwd().sib(2).pfwd().end())
 //demoEP.addRoute(PK.route().sib(0).pfwd().sib(1).end())
 
-
 // the 'net doodler' is the rendering engine that is *very* new and a little uggo, 
 // if you don't want to run it, just comment this line out. 
 // it ain't pretty, but we set a window global net doodler instance 
 
-// setTimeout(() => {
-//   window.nd = new NetDoodler(osap, 10, 10)
-// }, 500)
+setTimeout(() => {
+  window.nd = new NetDoodler(osap, 10, 10)
+}, 500)
 
 // if you want to run the accelerometer demo, uncomment the lines below: 
 
