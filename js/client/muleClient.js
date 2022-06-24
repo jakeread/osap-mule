@@ -41,18 +41,23 @@ dEp2.onData = async (data) => {
 }
 
 // route 2 self, 
-let dmRoute = PK.route().end()
+// let dmRoute = PK.route().end()
 // simple route, to remote, (20ms avg)
 //let dmRoute = PK.route().child(0).pfwd().sib(1).end() 
 // convoluted route, to remote, (21ms avg ping)
 //let dmRoute = PK.route().child(1).sib(2).sib(0).pfwd().sib(1).end()
 // route to local, (18.5ms avg ping)
 //let dmRoute = PK.route().child(1).end()
+// route to remote usb, should ping at the vport ? 
+//let dmRoute = PK.route().child(0).pfwd().sib(2).pfwd().parent().child(0).sib(1).end()
+let dmRoute = PK.route().child(0).pfwd().sib(2).pfwd().sib(2).end()
 let msAvg = 0
 let ping = () => {
+  console.warn(`ping issued`)
   osap.ping(dmRoute).then((ms) => {
-    ping()
-    msAvg = msAvg * 0.95 + ms * 0.05
+    //ping()
+    //msAvg = msAvg * 0.95 + ms * 0.05
+    msAvg = ms
     console.log(`ping returning at ${msAvg.toFixed(2)}ms`)
   }).catch((err) => {
     console.error(`err from ping:`, err)
@@ -73,12 +78,14 @@ let scopeTest = () => {
 
 let endpointTest = async () => {
   try {
-    dEp1.addRoute(PK.route().sib(2).end())
+    //dEp1.addRoute(PK.route().sib(2).end())
+    dEp1.addRoute(PK.route().sib(0).pfwd().sib(2).pfwd().sib(2).end())
     await dEp1.write(new Uint8Array([51, 52, 54]), "acked")
     console.warn(`EP WRITE OK`)
     let qr = osap.query(PK.route().sib(1).end())
     let data = await qr.pull()
     console.warn(`Query PULLS`, data)
+    return;
     // now let's do remote-add to *that* endpoint, 
     // this is... addressed from osap root, so, 
     await osap.mvc.setEndpointRoute(PK.route().child(2).end(), PK.route().sib(1).end())
@@ -90,7 +97,7 @@ let endpointTest = async () => {
   }
 }
 
-setTimeout(endpointTest, 200)
+// setTimeout(endpointTest, 200)
 
 // ---------------------------------------------- App... 
 

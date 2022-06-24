@@ -117,7 +117,6 @@ let portSweeper = () => {
       }
     }
     // set a timeout, 
-    console.warn(`portsweeper not on a loop, for single-open embedded debug...`)
     // setTimeout(portSweeper, 500)
   })
 }
