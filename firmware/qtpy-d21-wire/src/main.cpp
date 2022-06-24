@@ -45,32 +45,24 @@ VBus_ArduinoWire vbWire(&osap, "wire-vb", &Wire, ADDRESS_SELF);
 */
 // ---------------- Button: 2 
 
-/*
-
 uint8_t btn_down[1] = {1};
 uint8_t btn_up[1] = {0};
 
 Endpoint ep_button(&osap, "button");
 
-*/
-
 // ---------------- LED: 3 (2 w/o button... (!))
 
 EP_ONDATA_RESPONSES onLEDData(uint8_t* data, uint16_t len){
-  //DEBUG("rx: " + String(len) + " " + data[0] + " " + data[1]);
-  //digitalWrite(A4, !digitalRead(A4));
-  String msg = "endpoint rx " + String(len) + " bytes: ";
-  for(uint8_t i = 0; i < len; i ++){
-    msg += String(data[i]) + ", ";
-  }
-  OSAP::debug(msg);
-  /*
+  // String msg = "endpoint 'LED' rx " + String(len) + " bytes: ";
+  // for(uint8_t i = 0; i < len; i ++){
+  //   msg += String(data[i]) + ", ";
+  // }
+  // OSAP::debug(msg);
   if(data[0]){
     digitalWrite(OUTPUT_LED_PIN, HIGH);
   } else {
     digitalWrite(OUTPUT_LED_PIN, LOW);
   }
-  */
   return EP_ONDATA_ACCEPT;
 }
 
@@ -92,7 +84,7 @@ void setup() {
   digitalWrite(12, HIGH); // this is power to the neopixel, 
   pixel.begin();
   // add a route out to our pal, 
-  ep_led.addRoute((new Route())->sib(0)->pfwd()->sib(0)->pfwd()->sib(2), EP_ROUTEMODE_ACKED);
+  // ep_led.addRoute((new Route())->sib(0)->pfwd()->sib(0)->pfwd()->sib(2), EP_ROUTEMODE_ACKED);
 }
 
 uint32_t lastTx = 0;
@@ -101,9 +93,8 @@ uint8_t writeDiv = 0;
 uint8_t writeData[5] = { 1, 2, 3, 4, 5 };
 
 void loop() {
-  // loop occasionally, for debug... 
-  if(lastTx + 100 < millis()){
-    osap.loop();
+  osap.loop();
+  if(lastTx + 50 < millis()){
     lastTx = millis();
     // flash, 
     lastPixelState = !lastPixelState;
@@ -113,21 +104,18 @@ void loop() {
       pixel.setPixelColor(0, pixel.Color(0,0,0));
     }
     pixel.show();
-    // ...
-    if(ep_led.clearToWrite()){
-      for(uint8_t i = 0; i < 5; i ++){
-        writeData[i] ++;
-      }
-      ep_led.write(writeData, 5);
-    }
+    // if(ep_led.clearToWrite()){
+    //   for(uint8_t i = 0; i < 5; i ++){
+    //     writeData[i] ++;
+    //   }
+    //   ep_led.write(writeData, 5);
+    // }
     // OSAP::debug("debug test 123...");
-    /*
     // write new state, 
     if(!digitalRead(BTN_INPUT_PIN)){
       ep_button.write(btn_down, 1);
     } else {
       ep_button.write(btn_up, 1);
     }
-    */
   }
 }
