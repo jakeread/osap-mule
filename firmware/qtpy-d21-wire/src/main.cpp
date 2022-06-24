@@ -2,6 +2,7 @@
 //#include <Wire.h>
 #include <Adafruit_NeoPixel.h>
 #include "osape/core/osap.h"
+#include "osape/core/ts.h"
 #include "osape/vertices/endpoint.h"
 #include "osape_arduino/vp_arduinoSerial.h"
 #include "osape_arduino/vb_arduinoWire.h"
@@ -91,11 +92,13 @@ void setup() {
   digitalWrite(12, HIGH); // this is power to the neopixel, 
   pixel.begin();
   // add a route out to our pal, 
-  // ep_button.addRoute((new EndpointRoute(EP_ROUTE_ACKLESS))->bfwd(1, ADDRESS_FRIEND)->sib(3));
+  ep_led.addRoute((new Route())->sib(0)->pfwd()->sib(0)->pfwd()->sib(2), EP_ROUTEMODE_ACKED);
 }
 
 uint32_t lastTx = 0;
 boolean lastPixelState = false;
+uint8_t writeDiv = 0;
+uint8_t writeData[5] = { 1, 2, 3, 4, 5 };
 
 void loop() {
   // loop occasionally, for debug... 
@@ -110,6 +113,13 @@ void loop() {
       pixel.setPixelColor(0, pixel.Color(0,0,0));
     }
     pixel.show();
+    // ...
+    if(ep_led.clearToWrite()){
+      for(uint8_t i = 0; i < 5; i ++){
+        writeData[i] ++;
+      }
+      ep_led.write(writeData, 5);
+    }
     // OSAP::debug("debug test 123...");
     /*
     // write new state, 
