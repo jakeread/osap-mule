@@ -96,12 +96,15 @@ let endpointTest = async () => {
     console.warn(`Route GET OK`, route)
     await osap.mvc.removeEndpointRoute(dmRoute, 0)
     console.warn(`Route RM OK`)
+    await osap.mvc.setEndpointRoute(dmRoute, PK.route().sib(3).end())
+    console.log(PK.route().sib(1).end())
+    console.warn(`Route SET OK`)
   } catch (err) {
     console.error(err)
   }
 }
 
-// setTimeout(endpointTest, 200)
+setTimeout(endpointTest, 200)
 
 // ---------------------------------------------- App... 
 
