@@ -13,7 +13,9 @@ no warranty is provided, and users accept all liability.
 'use strict'
 
 import OSAP from '../osapjs/core/osapRoot.js'
-import { PK, TS, VT, EP, TIMES } from '../osapjs/core/ts.js'
+import { TS, VT, EP } from '../osapjs/core/ts.js'
+import PK from '../osapjs/core/packets.js'
+import TIME from '../osapjs/core/time.js'
 
 import Grid from '../osapjs/client/interface/grid.js' // main drawing API 
 import DT from '../osapjs/client/interface/domTools.js'
@@ -133,7 +135,7 @@ demoEP.onData = (buffer) => {
 
 setTimeout(() => {
   window.nd = new NetDoodler(osap, 10, 10)
-}, 500)
+}, 750)
 
 // if you want to run the accelerometer demo, uncomment the lines below: 
 

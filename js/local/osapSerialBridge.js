@@ -14,7 +14,8 @@ no warranty is provided, and users accept all liability.
 
 // big s/o to https://github.com/standard-things/esm for allowing this
 import OSAP from '../osapjs/core/osapRoot.js'
-import { TS, PK, TIMES } from '../osapjs/core/ts.js'
+import { TS } from '../osapjs/core/ts.js'
+import PK from '../osapjs/core/packets.js'
 
 import WSSPipe from './utes/wssPipe.js'
 import VPortSerial from '../osapjs/vport/vPortSerial.js'
