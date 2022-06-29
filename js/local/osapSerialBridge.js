@@ -52,17 +52,18 @@ ep1.onData = (data) => {
 // then resolves with the connected webSocketServer to us 
 let LOGWSSPHY = false 
 wssVPort.maxSegLength = 16384
+let wssVPortStatus = "opening"
+// here we attach the "clear to send" function,
+// in this case we aren't going to flowcontrol anything, js buffers are infinite
+// and also impossible to inspect  
+wssVPort.cts = () => { return (wssVPortStatus == "open") }
+// we also have isOpen, similarely simple here, 
+wssVPort.isOpen = () => { return (wssVPortStatus == "open") }
+
 WSSPipe.start().then((ws) => {
   // no loop or init code, 
   // implement status 
-  let status = "open"
-  wssVPort.cts = () => {
-    if (status == "open") {
-      return true
-    } else {
-      return false
-    }
-  }
+  wssVPortStatus = "open"
   // implement rx,
   ws.onmessage = (msg) => {
     if (LOGWSSPHY) console.log('PHY WSS Recv')
@@ -77,11 +78,11 @@ WSSPipe.start().then((ws) => {
   }
   // local to us, 
   ws.onerror = (err) => {
-    status = "closed"
+    wssVPortStatus = "closed"
     console.log('wss error', err)
   }
   ws.onclose = (evt) => {
-    status = "closed"
+    wssVPortStatus = "closed"
     // because this local script is remote-kicked,
     // we shutdown when the connection is gone
     console.log('wss closes, exiting')

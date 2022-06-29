@@ -106,7 +106,7 @@ let endpointTest = async () => {
   }
 }
 
-setTimeout(endpointTest, 200)
+// setTimeout(endpointTest, 200)
 
 // ---------------------------------------------- App... 
 
@@ -230,6 +230,14 @@ let LOGPHY = false
 console.log("making client-to-server request to start remote process,")
 console.log("and connecting to it w/ new websocket")
 
+let wscVPortStatus = "opening"
+// here we attach the "clear to send" function,
+// in this case we aren't going to flowcontrol anything, js buffers are infinite
+// and also impossible to inspect  
+wscVPort.cts = () => { return (wscVPortStatus == "open") }
+// we also have isOpen, similarely simple here, 
+wscVPort.isOpen = () => { return (wscVPortStatus == "open") }
+
 // ok, let's ask to kick a process on the server,
 // in response, we'll get it's IP and Port,
 // then we can start a websocket client to connect there,
@@ -239,22 +247,14 @@ jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
   if (res.includes('OSAP-wss-addr:')) {
     let addr = res.substring(res.indexOf(':') + 2)
     if (addr.includes('ws://')) {
-      let status = "opening"
-      // i.e. here we attach the "clear to send" function, 
-      wscVPort.cts = () => {
-        if (status == "open") {
-          return true
-        } else {
-          return false
-        }
-      }
+      wscVPortStatus = "opening"
       // start up, 
       console.log('starting socket to remote at', addr)
       let ws = new WebSocket(addr)
       ws.binaryType = "arraybuffer"
       // opens, 
       ws.onopen = (evt) => {
-        status = "open"
+        wscVPortStatus = "open"
         // implement rx
         ws.onmessage = (msg) => {
           let uint = new Uint8Array(msg.data)
@@ -267,11 +267,11 @@ jQuery.get('/startLocal/osapSerialBridge.js', (res) => {
         }
       }
       ws.onerror = (err) => {
-        status = "closed"
+        wscVPortStatus = "closed"
         console.log('sckt err', err)
       }
       ws.onclose = (evt) => {
-        status = "closed"
+        wscVPortStatus = "closed"
         console.log('sckt closed', evt)
       }
     }
