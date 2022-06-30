@@ -133,9 +133,18 @@ demoEP.onData = (buffer) => {
 // if you don't want to run it, just comment this line out. 
 // it ain't pretty, but we set a window global net doodler instance 
 
-setTimeout(() => {
-  window.nd = new NetDoodler(osap, 10, 10)
-}, 750)
+// setTimeout(() => {
+//   window.nd = new NetDoodler(osap, 10, 10)
+// }, 750)
+
+setTimeout(async () => {
+  try{
+    let res = await osap.connect("ep_loadcells", "ep_powerSwitches")
+    console.log('osap.connect is done...', res)
+  } catch (err) {
+    console.error(err) 
+  }
+}, 500)
 
 // if you want to run the accelerometer demo, uncomment the lines below: 
 
